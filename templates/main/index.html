@@ -128,6 +128,7 @@
     e.preventDefault(); // avoid to execute the actual submit of the form.
     var postData = $("#auth-form").serialize();
     var action = getArrayElementByName($("#auth-form").serializeArray(), "action");
+    var email = getArrayElementByName($("#auth-form").serializeArray(), "email");
 
     $.ajax({
       type: "POST",
@@ -142,6 +143,8 @@
         if(action == 'login' && data.result == 'Success'){
           $("#loginDropdown").addClass('hidden');
           $("#logoutDropdown").removeClass('hidden');
+          var l = $("#logoutDropdown").children('a[class=dropdown-toggle]')
+          $(l[0]).text("Logged in as " + email);
         }
         updateCsrf();
       }
