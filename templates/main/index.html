@@ -1,0 +1,172 @@
+{% load static %}
+
+<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" type="text/css" href="{% static 'main/style.css' %}" />
+
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<body>
+
+<nav class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
+  <div class="container-fluid">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    
+  </div>
+
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="navbar-collapse" id="bs-example-navbar-collapse-1">
+    <ul class="nav navbar-nav">
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+      <li id="loginDropdown" class="dropdown {% if loggedIn %} hidden{% endif %}" >
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Sign in<span class="caret"></span></a>
+        <ul class="login-dp dropdown-menu">
+          <li>
+            <div class="row">
+              <div class="col-md-12">
+                <form id="auth-form" class="form" role="form" method="post" action="auth" accept-charset="UTF-8">
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <label class="sr-only" for="exampleInputEmail2">Email address</label>
+                    <input type="email" name="email" class="form-control" id="exampleInputEmail2" placeholder="Email address" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="sr-only" for="exampleInputPassword2">Password</label>
+                    <input type="password" name="password" class="form-control" id="exampleInputPassword2" placeholder="Password" required>
+                    <div class="help-block text-right"><a href="">Forgot your password?</a></div>
+                  </div>
+                  <div class="help-block text-right"><b id="auth-error"></b></div>
+                  <div class="form-group">
+                    <button type="submit" name="action" value="login" class="submitBtn btn btn-primary btn-block">Sign in</button>
+                  </div>
+                  <div class="center">or</div>
+                  
+                  <div class="form-group">
+                    <button type="submit" name="action" value="register" class="submitBtn btn btn-block">Create account</button>
+                  </div>
+                  <input id="form-action" type="hidden" name="action" value="logout">
+                 </form>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </li>
+
+      <li id="logoutDropdown" class="dropdown {% if loggedIn is False %}hidden{% endif %}" >
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> Logged in as {{ user.email }} </b> <span class="caret"></span></a>
+        <ul class="login-dp dropdown-menu">
+          <li>
+            <div class="row">
+              <div class="col-md-12">
+                <form id="logout-form" class="form" role="form" method="post" action="auth" accept-charset="UTF-8">
+                  {% csrf_token %}
+                  <div class="form-group">
+                     <button type="submit" name="action" value="logout" class="btn btn-warning btn-block">Logout</button>
+                  </div>
+                  <input id="form-action" type="hidden" name="action" value="logout">
+                 </form>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+  </div>
+</nav>
+
+<script type="text/javascript">
+
+  function getArrayElementByName(arr, name){
+    for(var i=0; i<arr.length; i++)
+      if(arr[i].name == name)
+        return arr[i].value;
+    return '';
+  }
+
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = jQuery.trim(cookies[i]);
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function updateCsrf(){
+    var csrftoken = getCookie('csrftoken');
+    
+    var tokens = $('input[name=csrfmiddlewaretoken]');
+    for(var i=0; i<tokens.length; i++)
+      tokens.val(csrftoken);
+  }
+  
+  $(".submitBtn").click(function(e){
+    var E = $("#form-action")
+    var v = e.target.value
+    E.val(v);
+
+  })
+
+  $("#auth-form").submit(function(e) {
+    e.preventDefault(); // avoid to execute the actual submit of the form.
+    var postData = $("#auth-form").serialize();
+    var action = getArrayElementByName($("#auth-form").serializeArray(), "action");
+
+    $.ajax({
+      type: "POST",
+      url: "auth",
+      data: postData, // serializes the form's elements.
+      error: function(e, data){
+        $("#auth-error").text(data.message);
+        updateCsrf();
+      },
+      success: function(data){
+        $("#auth-error").text(data.message)
+        if(action == 'login' && data.result == 'Success'){
+          $("#loginDropdown").addClass('hidden');
+          $("#logoutDropdown").removeClass('hidden');
+        }
+        updateCsrf();
+      }
+    });
+  });
+
+  $("#logout-form").submit(function(e) {
+    e.preventDefault(); // avoid to execute the actual submit of the form.
+    var postData = $("#logout-form").serialize();
+
+    $.ajax({
+      type: "POST",
+      url: "auth",
+      data: postData, // serializes the form's elements.
+      error: function(e, data){
+        console.log('error', e);
+        updateCsrf();
+      },
+      success: function(data){
+        $("#logoutDropdown").addClass('hidden');
+        $("#loginDropdown").removeClass('hidden');
+        updateCsrf();
+       }
+    });
+  });
+
+</script>
+</body>
