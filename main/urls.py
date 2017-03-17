@@ -5,5 +5,8 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    url(r'^calendardemo', views.calendardemo, name='calendardemo'),
     url(r'^auth', views.authForm, name='authForm'),
+    url(r'^rooms', views.rooms, name='rooms'),
+	url(r'^saveMeeting', views.saveMeeting, name='saveMeeting'),
 ]

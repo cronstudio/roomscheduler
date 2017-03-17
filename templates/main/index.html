@@ -1,19 +1,27 @@
 {% load static %}
 
-<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
 
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" crossorigin="anonymous">
+<script src='/static/main/cal/jquery.min.js'></script>
 
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'main/style.css' %}" />
-
 <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+<link href='/static/main/cal/fullcalendar.min.css' rel='stylesheet' />
+<link href='/static/main/cal/fullcalendar.print.min.css' rel='stylesheet' media='print' />
+<link href='/static/main/scheduler.min.css' rel='stylesheet' />
+<script src='/static/main/cal/moment.min.js'></script>
+<script src='/static/main/cal/fullcalendar.min.js'></script>
+<script src='/static/main/scheduler.min.js'></script>
+
+
+
+<script type="text/javascript" src="{% static 'main/bootstrap-datetimepicker.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'main/bootstrap-datetimepicker.min.css' %}"/>
+
+
 <body>
 
 <nav class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
@@ -63,7 +71,7 @@
       </li>
 
       <li id="logoutDropdown" class="dropdown {% if loggedIn is False %}hidden{% endif %}" >
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> Logged in as {{ user.email }} </b> <span class="caret"></span></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> Logged in as {{ user.username }} </b> <span class="caret"></span></a>
         <ul class="login-dp dropdown-menu">
           <li>
             <div class="row">
@@ -84,6 +92,109 @@
   </div>
   </div>
 </nav>
+
+<div id='calendar'></div>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header modal-header-confirm">
+          <h4 id="modal-title" class="modal-title ng-binding">
+          Create meeting
+              <a title="Close">
+                <i class="glyphicon glyphicon-remove icon-arrow-right pull-right close" data-dismiss="modal" aria-label="Close" ng-click="CloseModal()"></i>
+              </a> 
+          </h4>
+      </div>
+      
+      <div class="modal-body">
+        <form id="meeting-form">
+          {% csrf_token %}
+          Title:
+          <div>
+            <div class="row">
+              <div class='col-sm-6'>
+                <div class="form-group">
+                  <div id='eventTitle'>
+                    <input name='title' type='text' class="form-control"/>
+                  </div>
+                </div>
+            </div>
+          </div>
+          Description:
+          <div>
+            <div class="row">
+              <div class='col-sm-6'>
+                <div class="form-group">
+                  <div id='eventDescription'>
+                    <textarea class="form-control notresizable" name="description" rows="2"></textarea>
+                  </div>
+                </div>
+            </div>
+          </div>
+          Date:
+          <div>
+            <div class="row">
+              <div class='col-sm-6'>
+                <div class="form-group">
+                    <div class='input-group date' id='eventDate'>
+                        <input name='date' type='text' class="form-control" />
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+          </div>
+          Time: 
+          <div>
+            <div class="row">
+              <div class='col-sm-6'>
+                <div class="form-group">
+                    <div class='input-group date' id='eventTime'>
+                        <input name='time' type='text' class="form-control" />
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+          </div>
+          Duration: 
+          <div>
+            <div class="row">
+              <div class='col-sm-6'>
+                <div class="form-group">
+                  <div class='input-group date' id='eventDuration'>
+                    <input type='text' name='duration' class="form-control" />
+                    <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-hourglass"></span>
+                    </span>
+                  </div>
+                
+                </div>
+            </div>
+          </div>
+          Room: 
+          <div>
+            <div class="row">
+              <div class='col-sm-6'>
+                <div class="form-group">
+                  <select class="form-control" name='room' id="roomSelect">
+                  </select>
+                </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script type="text/javascript">
 
@@ -116,12 +227,17 @@
     for(var i=0; i<tokens.length; i++)
       tokens.val(csrftoken);
   }
+
+  function removeOptions(selectbox){
+    for(var i = selectbox.options.length - 1; i >= 0; i--){
+      selectbox.remove(i);
+    }
+  }
   
   $(".submitBtn").click(function(e){
     var E = $("#form-action")
     var v = e.target.value
     E.val(v);
-
   })
 
   $("#auth-form").submit(function(e) {
@@ -142,6 +258,7 @@
         $("#auth-error").text(data.message)
         if(action == 'login' && data.result == 'Success'){
           $("#loginDropdown").addClass('hidden');
+          $("#calendar").removeClass('hidden');
           $("#logoutDropdown").removeClass('hidden');
           var l = $("#logoutDropdown").children('a[class=dropdown-toggle]')
           $(l[0]).text("Logged in as " + email);
@@ -165,11 +282,158 @@
       },
       success: function(data){
         $("#logoutDropdown").addClass('hidden');
+        $("#calendar").addClass('hidden');
         $("#loginDropdown").removeClass('hidden');
         updateCsrf();
        }
     });
   });
+
+  $("#meeting-form").submit(function(e) {
+    e.preventDefault(); // avoid to execute the actual submit of the form.
+    var postData = $("#meeting-form").serialize();
+
+    $.ajax({
+      type: "POST",
+      url: "saveMeeting",
+      data: postData, // serializes the form's elements.
+      error: function(e, data){
+        updateCsrf();
+      },
+      success: function(data){
+        console.log("Meeting posted", data);
+        updateCsrf();
+        $("#myModal").modal('hide');
+       }
+    });
+  });
+
+  $(document).ready(function() {
+
+    $('#calendar').fullCalendar({
+      header: {
+        left: 'today prev,next',
+        center: 'title',
+        right: 'timelineDay,timelineThreeDays,agendaWeek,month'
+      },
+      editable: true,
+      defaultView: 'timelineDay',
+      views: {
+        timelineThreeDays: {
+          type: 'timeline',
+          duration: { days: 3 }
+        }
+      },
+      eventOverlap: false,
+      schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+      resources: [
+        {% if loggedIn %}{% for r in rooms %}
+          {
+            id: "{{r.id}}",
+            title: "{{r.name}}",
+            eventColor: "{{r.color}}",
+          },{% endfor %}{% endif %}
+      ],
+      resourceAreaWidth: '15%',
+      events:[
+      {% if loggedIn %}{% for m in meetings %}
+          {
+            title: "{{m.title}}",
+            start: "{{m.start}}",
+            end: "{{m.end}}",
+            resourceId: "{{m.room}}",
+            data: { {% for k,v in m.data.items %}
+              {{k}}: "{{v}}",
+            {% endfor %} }
+          },{% endfor %}{% endif %}
+      ],
+      eventDrop: function( event, delta, revertFunc, jsEvent, ui, view){
+        // TODO
+      },
+      dayClick: function(date, allDay, jsEvent, view) {
+        console.log("Day Click");
+        $.ajax({
+          type: "GET",
+          url: "rooms",
+          error: function(e, data){
+            console.log('error', e);
+          },
+          success: function(data){
+            console.log(data);
+            var rooms = data.rooms;
+            removeOptions($('#roomSelect')[0]);
+
+            for(var i=0; i<rooms.length; i++){
+              $('#roomSelect').append( $("<option>")
+                  .val(rooms[i].id)
+                  .html(rooms[i].name)
+              ); 
+            }
+
+           }
+        });
+
+        s = date.date() + "-" + (date.month()+1) + "-" + date.year()
+        $('#modal-title').text("Create meeting");
+        $('#eventDate').data('DateTimePicker').date(s);
+        $('#eventDuration').data('DateTimePicker').date("01:30");
+        $('#myModal').modal('show');
+      },
+      eventClick: function(event, jsEvent, view){
+        console.log("Event Click");
+        
+        $.ajax({
+          type: "GET",
+          url: "rooms",
+          error: function(e, data){
+            console.log('error', e);
+          },
+          success: function(data){
+            console.log(data);
+            var rooms = data.rooms;
+            removeOptions($('#roomSelect')[0]);
+
+            for(var i=0; i<rooms.length; i++){
+              $('#roomSelect').append( $("<option>")
+                  .val(rooms[i].id)
+                  .html(rooms[i].name)
+              );
+            }
+            var modal = $("#myModal")
+            $('#modal-title').text("Edit meeting");
+            modal.find('input[name=title]').val(event.data.name);
+            modal.find('textarea[name=description]').val(event.data.description);
+            $('#eventDate').data('DateTimePicker').date(event.data.date);
+            $('#eventTime').data('DateTimePicker').date(event.data.time);
+            $('#eventDuration').data('DateTimePicker').date(event.data.durationTime);
+            modal.find('input[name=room]').val(event.data.room);
+
+            $('#myModal').modal('show');
+
+           }
+        });
+
+      }
+    });
+
+    $('#calendar').fullCalendar('option', 'aspectRatio', 1.9);
+    if( "{{loggedIn}}" == "False")
+      $('#calendar').addClass('hidden');
+
+  });
+    $(function () {
+        $('#eventDate').datetimepicker({
+          format: 'DD-MM-YYYY',
+          useCurrent: false,
+        });
+        $('#eventTime').datetimepicker({
+            format: 'HH:mm',
+        });
+        $('#eventDuration').datetimepicker({
+            format: 'HH:mm',
+        });
+    });
+
 
 </script>
 </body>
