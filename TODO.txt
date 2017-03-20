@@ -1,0 +1,13 @@
+- check for errors on user creation
+- disallow creation of meetings on past dates
+- disallow writing on meetings not owned, but probably allow reading
+- check API security
+
+DONE:
+- check for errors on meeting creation, backend
+- fetch meetings
+- check for errors on meeting creation, frontend !!! +-, can probably have more
+- edit meeting
+- edit meeting with drag & drop and resizing
+- proper edit function
+- delete meetings

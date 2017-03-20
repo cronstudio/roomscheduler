@@ -15,7 +15,7 @@
 <script src='/static/main/cal/moment.min.js'></script>
 <script src='/static/main/cal/fullcalendar.min.js'></script>
 <script src='/static/main/scheduler.min.js'></script>
-
+<script src='/static/main/locale/pt.js'></script>
 
 
 <script type="text/javascript" src="{% static 'main/bootstrap-datetimepicker.min.js' %}"></script>
@@ -37,7 +37,7 @@
     </ul>
     <ul class="nav navbar-nav navbar-right">
       <li id="loginDropdown" class="dropdown {% if loggedIn %} hidden{% endif %}" >
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Sign in<span class="caret"></span></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Entrar<span class="caret"></span></a>
         <ul class="login-dp dropdown-menu">
           <li>
             <div class="row">
@@ -46,21 +46,21 @@
                   {% csrf_token %}
                   <div class="form-group">
                     <label class="sr-only" for="exampleInputEmail2">Email address</label>
-                    <input type="email" name="email" class="form-control" id="exampleInputEmail2" placeholder="Email address" required>
+                    <input type="email" name="email" class="form-control" id="exampleInputEmail2" placeholder="Endereço de email" required>
                   </div>
                   <div class="form-group">
                     <label class="sr-only" for="exampleInputPassword2">Password</label>
-                    <input type="password" name="password" class="form-control" id="exampleInputPassword2" placeholder="Password" required>
-                    <div class="help-block text-right"><a href="">Forgot your password?</a></div>
+                    <input type="password" name="password" class="form-control" id="exampleInputPassword2" placeholder="Palavra passe" required>
+                    <!-- <div class="help-block text-right"><a href="">Forgot your password?</a></div> -->
                   </div>
-                  <div class="help-block text-right"><b id="auth-error"></b></div>
+                  <div class="help-block text-right error-message"><b id="auth-error"></b></div>
                   <div class="form-group">
-                    <button type="submit" name="action" value="login" class="submitBtn btn btn-primary btn-block">Sign in</button>
+                    <button type="submit" name="action" value="login" class="submitAuthBtn btn btn-primary btn-block">Entrar</button>
                   </div>
                   <div class="center">or</div>
                   
                   <div class="form-group">
-                    <button type="submit" name="action" value="register" class="submitBtn btn btn-block">Create account</button>
+                    <button type="submit" name="action" value="register" class="submitAuthBtn btn btn-secondary btn-block">Criar conta</button>
                   </div>
                   <input id="form-action" type="hidden" name="action" value="logout">
                  </form>
@@ -71,7 +71,7 @@
       </li>
 
       <li id="logoutDropdown" class="dropdown {% if loggedIn is False %}hidden{% endif %}" >
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> Logged in as {{ user.username }} </b> <span class="caret"></span></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> Conectado como {{ user.username }} </b> <span class="caret"></span></a>
         <ul class="login-dp dropdown-menu">
           <li>
             <div class="row">
@@ -79,7 +79,7 @@
                 <form id="logout-form" class="form" role="form" method="post" action="auth" accept-charset="UTF-8">
                   {% csrf_token %}
                   <div class="form-group">
-                     <button type="submit" name="action" value="logout" class="btn btn-warning btn-block">Logout</button>
+                     <button type="submit" name="action" value="logout" class="btn btn-warning btn-block">Sair</button>
                   </div>
                   <input id="form-action" type="hidden" name="action" value="logout">
                  </form>
@@ -101,7 +101,7 @@
     <div class="modal-content">
       <div class="modal-header modal-header-confirm">
           <h4 id="modal-title" class="modal-title ng-binding">
-          Create meeting
+          Criar reunião
               <a title="Close">
                 <i class="glyphicon glyphicon-remove icon-arrow-right pull-right close" data-dismiss="modal" aria-label="Close" ng-click="CloseModal()"></i>
               </a> 
@@ -111,92 +111,80 @@
       <div class="modal-body">
         <form id="meeting-form">
           {% csrf_token %}
-          Title:
-          <div>
-            <div class="row">
-              <div class='col-sm-6'>
-                <div class="form-group">
-                  <div id='eventTitle'>
-                    <input name='title' type='text' class="form-control"/>
-                  </div>
-                </div>
+          <div class="form-group has-feedback" id='eventTitle'>
+            <label class="control-label" for="meeting-form-title">Nome:</label>
+            <input name='title' type='text' class="form-control" id="meeting-form-title" onchange="meetingTitleChanged()" />
+            <span class="fixtooltip glyphicon glyphicon-warning-sign form-control-feedback hidden" aria-hidden="true" data-toggle="tooltip" title="Meeting title cannot be empty"></span>
+          </div>
+          <div class="form-group has-feedback" id='eventDescription'>
+            <label class="control-label" for="meeting-form-description">Descrição:</label>
+            <textarea class="form-control notresizable" name="description" rows="2" id="meeting-form-description"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="control-label" for="meeting-form-date">Data:</label>
+            <div class='input-group date' id='eventDate'>
+              <input name='date' type='text' class="form-control" id="meeting-form-date"/>
+              <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-calendar"></span>
+              </span>
             </div>
           </div>
-          Description:
-          <div>
-            <div class="row">
-              <div class='col-sm-6'>
-                <div class="form-group">
-                  <div id='eventDescription'>
-                    <textarea class="form-control notresizable" name="description" rows="2"></textarea>
-                  </div>
-                </div>
+          <div class="form-group has-feedback">
+            <label class="control-label" for="meeting-form-time">Hora:</label>
+            <div class='input-group date' id='eventTime'>
+              <input name='time' type='text' class="form-control" id="meeting-form-time"/>
+              <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-time"></span>
+              </span>
             </div>
           </div>
-          Date:
-          <div>
-            <div class="row">
-              <div class='col-sm-6'>
-                <div class="form-group">
-                    <div class='input-group date' id='eventDate'>
-                        <input name='date' type='text' class="form-control" />
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                    </div>
-                </div>
+          <div class="form-group has-feedback">
+            <label class="control-label" for="meeting-form-duration">Duração:</label>
+            <div class='input-group date' id='eventDuration'>
+              <input name='duration' type='text' class="form-control" id="meeting-form-duration"/>
+              <span class="input-group-addon">
+                <span class="glyphicon glyphicon-hourglass"></span>
+              </span>
             </div>
           </div>
-          Time: 
-          <div>
-            <div class="row">
-              <div class='col-sm-6'>
-                <div class="form-group">
-                    <div class='input-group date' id='eventTime'>
-                        <input name='time' type='text' class="form-control" />
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
+          <div class="form-group">
+            <label class="control-label" for="roomSelect">Espaço:</label>
+            <select class="fixselect form-control selectpicker" name='room' id="roomSelect">
+            </select>
           </div>
-          Duration: 
-          <div>
-            <div class="row">
-              <div class='col-sm-6'>
-                <div class="form-group">
-                  <div class='input-group date' id='eventDuration'>
-                    <input type='text' name='duration' class="form-control" />
-                    <span class="input-group-addon">
-                      <span class="glyphicon glyphicon-hourglass"></span>
-                    </span>
-                  </div>
-                
-                </div>
-            </div>
+          <div class="help-block text-right error-message"><b id="meeting-error"></b></div>
+      
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" id="saveMeetingBtn">Guardar</button>
+            <button type="submit" class="btn btn-danger" id="deleteMeetingBtn">Apagar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
           </div>
-          Room: 
-          <div>
-            <div class="row">
-              <div class='col-sm-6'>
-                <div class="form-group">
-                  <select class="form-control" name='room' id="roomSelect">
-                  </select>
-                </div>
-            </div>
-          </div>
+
         </form>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 
 <script type="text/javascript">
+  meetingAction = 'create';
+  selectedEvent = null;
+
+  $("#meeting-form").find('input[name=title]').focusout(meetingTitleChanged);
+
+  function meetingTitleChanged(){
+    var view = $("#meeting-form").find('input[name=title]');
+    console.log("oi", view)
+    V = view;
+    if(view.val() == ""){
+      $(view.parent()).find('span').removeClass('hidden');
+      return false;
+    }else{
+      $(view.parent()).find('span').addClass('hidden');
+      return true;
+    }
+
+  }
 
   function getArrayElementByName(arr, name){
     for(var i=0; i<arr.length; i++)
@@ -233,11 +221,42 @@
       selectbox.remove(i);
     }
   }
+
+  function removeCalendarResources(c){
+    arr = $('#calendar').fullCalendar('getResources');
+    for(var i=0; i<arr.length; i++)
+      $('#calendar').fullCalendar('removeResource', arr[i].id);
+  }
+
+  function addCalendarResources(arr){
+    for(var i=0; i<arr.length; i++)
+      $('#calendar').fullCalendar('addResource', arr[i]);
+  }
+
+  function fetchCalendar(){
+    $.ajax({
+      type: "GET",
+      url: "calendar",
+      error: function(e, data){
+        console.log(e)
+      },
+      success: function(data){
+        if(data.result == 'Success'){
+          $('#calendar').fullCalendar('removeEvents');
+          removeCalendarResources();
+          addCalendarResources(data.rooms);
+          R = data.rooms;
+
+          for(var i=0; i<data.meetings.length; i++){
+            $('#calendar').fullCalendar( 'renderEvent', data.meetings[i], true);
+          }
+        }
+      }
+    });
+  }
   
-  $(".submitBtn").click(function(e){
-    var E = $("#form-action")
-    var v = e.target.value
-    E.val(v);
+  $(".submitAuthBtn").click(function(e){
+    $("#form-action").val(e.target.value);
   })
 
   $("#auth-form").submit(function(e) {
@@ -261,12 +280,75 @@
           $("#calendar").removeClass('hidden');
           $("#logoutDropdown").removeClass('hidden');
           var l = $("#logoutDropdown").children('a[class=dropdown-toggle]')
-          $(l[0]).text("Logged in as " + email);
+          $(l[0]).text("Conectado como " + email);
+
+          fetchCalendar();
         }
         updateCsrf();
       }
     });
   });
+
+  function validateMeetingForm(){
+    return meetingTitleChanged();
+  }
+
+  function serializedArray(data){
+    var arr = [];
+    for (var k in data) {
+      arr.push({name: k, value: data[k]});
+    }
+    return arr;
+  }
+
+  function updateMeeting(event, revertFunc){
+    E = event;
+    var data = {};
+    data.csrfmiddlewaretoken = getCookie('csrftoken');
+    data.id = event.data.id;
+    data.title = event.data.name;
+    data.description = event.data.description;
+    data.date = event.start.format("DD-MM-YYYY");
+    data.time = event.start.format("HH:mm");
+    var d = moment.duration(E.end.diff(E.start));
+    data.duration = Math.floor(d.asMinutes() / 60) + ":" + d.asMinutes() % 60;
+
+    console.log(data);
+    data.room = event.resourceId;
+
+    arrData = serializedArray(data);
+    postMeeting('editMeeting', arrData, function(){revertFunc()}, null);
+  }
+
+  function postMeeting(url, postData, onError, onSuccess){
+
+    $.ajax({
+      type: "POST",
+      url: url,
+      data: postData,
+      error: function(e, data){
+        updateCsrf();
+        if(onError != null)
+          onError(data);
+      },
+      success: function(data){
+        updateCsrf();
+        if(data.result == "Success"){
+          console.log("Meeting posted with success", data);
+          $("#myModal").modal('hide');
+          if(onSuccess != null)
+            onSuccess(data);
+          fetchCalendar();
+        }else{
+          console.log("Meeting posted with error", data.message);
+          $("#meeting-error").text(data.message);
+          if(onError != null)
+            onError(data);
+        }
+        
+       }
+    });
+  }
 
   $("#logout-form").submit(function(e) {
     e.preventDefault(); // avoid to execute the actual submit of the form.
@@ -289,26 +371,63 @@
     });
   });
 
-  $("#meeting-form").submit(function(e) {
+  //$("#meeting-form").submit(function(e) {
+  $("#saveMeetingBtn").click(function(e) {
     e.preventDefault(); // avoid to execute the actual submit of the form.
-    var postData = $("#meeting-form").serialize();
 
-    $.ajax({
-      type: "POST",
-      url: "saveMeeting",
-      data: postData, // serializes the form's elements.
-      error: function(e, data){
-        updateCsrf();
-      },
-      success: function(data){
-        console.log("Meeting posted", data);
-        updateCsrf();
-        $("#myModal").modal('hide');
-       }
-    });
+    if(!validateMeetingForm()){
+      $("#meeting-error").text("Corrija os erros e submeta novamente");
+      return;
+    }
+
+    var postData = $("#meeting-form").serializeArray();
+    console.log(postData);
+
+    var url = 'createMeeting';
+    if(meetingAction == 'edit'){
+      url = 'editMeeting';
+      postData.push({name: 'id', value: selectedEvent.data.id});
+    }
+    postMeeting(url, postData);
+    
   });
 
+  $("#deleteMeetingBtn").click(function(e) {
+    e.preventDefault(); // avoid to execute the actual submit of the form.
+
+    if(confirm("Tem a certeza que pretende apagar esta reunião?")){
+      $.ajax({
+        type: "POST",
+        url: "deleteMeeting",
+        data: [{name: 'id', value: selectedEvent.data.id}, {name: 'csrfmiddlewaretoken', value: getCookie('csrftoken')}],
+        error: function(e, data){
+          updateCsrf();
+        },
+        success: function(data){
+          updateCsrf();
+          if(data.result == "Success"){
+            console.log("Meeting deleted successfully", data);
+            $("#myModal").modal('hide');
+            fetchCalendar();
+          }else{
+            console.log("Delete meeting failed", data.message);
+            $("#meeting-error").text(data.message);
+          }
+          
+         }
+      });
+
+    }
+
+
+    
+  });
+
+
   $(document).ready(function() {
+    $('[data-toggle="tooltip"]').tooltip({
+      placement : 'top'
+    });
 
     $('#calendar').fullCalendar({
       header: {
@@ -324,6 +443,7 @@
           duration: { days: 3 }
         }
       },
+      locale: 'pt',
       eventOverlap: false,
       schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
       resources: [
@@ -335,6 +455,7 @@
           },{% endfor %}{% endif %}
       ],
       resourceAreaWidth: '15%',
+      resourceLabelText: "Espaços",
       events:[
       {% if loggedIn %}{% for m in meetings %}
           {
@@ -342,16 +463,31 @@
             start: "{{m.start}}",
             end: "{{m.end}}",
             resourceId: "{{m.room}}",
+            editable: {{m.editable}},
             data: { {% for k,v in m.data.items %}
               {{k}}: "{{v}}",
             {% endfor %} }
           },{% endfor %}{% endif %}
       ],
-      eventDrop: function( event, delta, revertFunc, jsEvent, ui, view){
-        // TODO
+      eventMouseover: function(event, jsEvent, view) {
+        jsEvent.preventDefault();
+        JE = jsEvent;
+        E = event;
+        V = view;
       },
-      dayClick: function(date, allDay, jsEvent, view) {
+      eventResize: function(event, delta, revertFunc) {
+        updateMeeting(event, revertFunc);
+      },
+      eventDrop: function(event, delta, revertFunc, jsEvent, ui, view){
+        updateMeeting(event, revertFunc);
+      },
+      dayClick: function(date, allDay, jsEvent, resource, view) {
         console.log("Day Click");
+        $("#meeting-form").find("input[type=text], textarea").val("");
+        meetingAction = 'create';
+        selectedEvent = null;
+        $("#meeting-error").text("");
+
         $.ajax({
           type: "GET",
           url: "rooms",
@@ -367,20 +503,28 @@
               $('#roomSelect').append( $("<option>")
                   .val(rooms[i].id)
                   .html(rooms[i].name)
-              ); 
+              );
             }
+            $("#roomSelect").val(resource.id);
 
            }
         });
 
         s = date.date() + "-" + (date.month()+1) + "-" + date.year()
-        $('#modal-title').text("Create meeting");
+        $('#modal-title').text("Criar reunião");
         $('#eventDate').data('DateTimePicker').date(s);
         $('#eventDuration').data('DateTimePicker').date("01:30");
+        $('#deleteMeetingBtn').addClass('hidden');
         $('#myModal').modal('show');
       },
       eventClick: function(event, jsEvent, view){
         console.log("Event Click");
+        if(!event.editable)
+          return;
+
+        meetingAction = 'edit';
+        selectedEvent = event;
+        $("#meeting-error").text("");
         
         $.ajax({
           type: "GET",
@@ -400,14 +544,15 @@
               );
             }
             var modal = $("#myModal")
-            $('#modal-title').text("Edit meeting");
+            $('#modal-title').text("Editar reunião");
             modal.find('input[name=title]').val(event.data.name);
             modal.find('textarea[name=description]').val(event.data.description);
             $('#eventDate').data('DateTimePicker').date(event.data.date);
             $('#eventTime').data('DateTimePicker').date(event.data.time);
             $('#eventDuration').data('DateTimePicker').date(event.data.durationTime);
-            modal.find('input[name=room]').val(event.data.room);
+            $('#roomSelect').val(event.data.room);
 
+            $('#deleteMeetingBtn').removeClass('hidden');
             $('#myModal').modal('show');
 
            }
