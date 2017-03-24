@@ -8,7 +8,7 @@ def checkMeetingData(m):
 	print([m.room.id, s, s, e, e])
 	meetings = list(Meeting.objects.raw(q, [m.room.id, s, s, e, e]))
 	for i in meetings:
-		print(i.name, i.start, i.start + timedelta(minutes=i.duration))
+		print(i.description, i.start, i.start + timedelta(minutes=i.duration))
 	print("Meetings:", len(meetings))
 	if len(meetings) == 0 or (len(meetings) == 1 and m.id != None and meetings[0].id == m.id):
 		return (True, '')
