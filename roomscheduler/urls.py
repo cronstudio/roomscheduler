@@ -16,10 +16,15 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.conf.urls import handler404
+import main.views as views
 
 admin.site.site_header = 'Página de Administração'
+
+handler404 = views.handler404
 
 urlpatterns = [
 	url(r'^',  include('main.urls')),
     url(r'^admin/', admin.site.urls),
 ]
+

@@ -8,8 +8,10 @@ from django.http import HttpResponse, JsonResponse
 from django.template import loader
 from django.contrib.auth.models import User, AnonymousUser
 from main import models
+from django.db.models import Q
+from main.models import Room, Meeting, Entity
 from datetime import datetime, timedelta
-from main.data import checkMeetingData
+from main.data import *
 
 from django.conf.urls import include, url
 from main.helpers import *
@@ -33,7 +35,7 @@ def authForm(request):
 def rooms(request):
 	if request.method == 'GET':
 		if request.user.is_authenticated():
-			data = models.Room.objects.all().values('id', 'name')
+			data = models.Room.objects.filter(active=True).values('id', 'name')
 			return JsonResponse({'result': 'Success', 'rooms': list(data)})
 		else:
 			return JsonResponse({'result': 'Failed', 'message': 'User not logged in'})
@@ -45,38 +47,48 @@ def rooms(request):
 def createMeeting(request):
 	if request.method == 'POST':
 		data = request.POST
+		print(data)
 		start, duration = parseMeetingTime(data)
+		if not models.Room.objects.get(id=int(data['room'])).active:
+			return JsonResponse({'result': 'Failed', 'message': 'This room is currently not active'})
 		
 		meeting = models.Meeting(user=request.user, description=data['description'], start=start, duration=duration, room=models.Room.objects.get(id=int(data['room']) ) )
-		result, message = checkMeetingData(meeting);
+		meeting = tzAware(meeting)
+		result, message = checkMeetingData(None, meeting);
 		if not result:
 			return JsonResponse({'result': 'Failed', 'message': message})
 		else:
 			meeting.save()
-			return JsonResponse({'result': 'Success'})
+			return JsonResponse({'result': 'Success', 'data': meeting2FCEvent(meeting, request)})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
 
+
 @login_required(redirect_field_name="requiresLogin")
 def editMeeting(request):
+
 	print("Is super user?", request.user.is_superuser)
 	# TODO: check owner
 	if request.method == 'POST':
 		data = request.POST
 		start, duration = parseMeetingTime(data)
 		
+		original = models.Meeting.objects.get(id=data['id'])
 		meeting = models.Meeting.objects.get(id=data['id'])
 		meeting.description = data['description']
-		meeting.start = start
+		meeting.start = timezone.localtime(start)
 		meeting.duration = duration
 		meeting.room = models.Room.objects.get(id=int(data['room']) )
+		meeting  = tzAware(meeting)
+		if not models.Room.objects.get(id=int(data['room'])).active:
+			return JsonResponse({'result': 'Failed', 'message': 'This room is currently not active'})
 		
-		result, message = checkMeetingData(meeting);
+		result, message = checkMeetingData(original, meeting)
 		if not result:
 			return JsonResponse({'result': 'Failed', 'message': message})
 		else:
 			meeting.save()
-			return JsonResponse({'result': 'Success'})
+			return JsonResponse({'result': 'Success', 'data': meeting2FCEvent(meeting, request)})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
 
@@ -87,7 +99,7 @@ def deleteMeeting(request):
 		
 		try:
 			meeting = models.Meeting.objects.get(id=data['id'])
-			if meeting.user.id != request.user.id:
+			if not request.user.is_superuser and meeting.user.id != request.user.id:
 				return JsonResponse({'result': 'Failed', 'message': 'Cannot delete meeting created by someone else'})
 			meeting.delete()
 			return JsonResponse({'result': 'Success'})
@@ -115,13 +127,13 @@ def login(request):
 	else:
 		if found != None and found.is_active == False:
 			response_data['result'] = 'Failed'
-			response_data['message'] = 'Account must be activated by an admin'
+			response_data['message'] = 'A sua conta deve ser activada por um administrador'
 		elif found != None:
 			response_data['result'] = 'Failed'
-			response_data['message'] = 'Wrong password!'
+			response_data['message'] = 'Password errada!'
 		else:
 			response_data['result'] = 'Failed'
-			response_data['message'] = 'No account found for this username'
+			response_data['message'] = 'Nenhuma conta encontrada com email'
 	
 	return JsonResponse(response_data)
 
@@ -151,6 +163,7 @@ def logout(request):
 def requiresLogin(request):
 	return JsonResponse({'result': 'Failed', 'message': 'This action requires login'})
 
+@login_required(redirect_field_name="requiresLogin")
 def editUser(request):
 	if not request.user.is_superuser:
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
@@ -158,33 +171,66 @@ def editUser(request):
 	if request.method == 'POST':
 		data = request.POST
 		try:
+			print(data)
+			
+			if data['email'] == "" or data['name'] == "" or data['entity'] == "":
+				return JsonResponse({'result': 'Failed', 'message': 'Deve preencher todos os campos na edição de um utilizador'})
+
 			user = User.objects.get(id=data['id'])
+			userExists = usernameExists(data['email'])
+			if userExists != None and userExists.id != user.id:
+				return JsonResponse({'result': 'Failed', 'message': 'Este email já pertence a outro utilizador.'})
+			
+			was_active = user.is_active
 			user.username = user.email = data['email']
 			user.entity.name = data['entity']
 			user.first_name = data['name']
+			user.is_active = False if data['active'] == "false" else True
+			user.is_superuser = False if data['superuser'] == "false" else True
+			if data['password'] != "":
+				user.set_password(data['password'])
+			if was_active and not user.is_active:
+				deactivateUser(user)
+			elif not was_active and user.is_active:
+				activateUser(user)
 			user.save()
-			return JsonResponse({'result': 'Success', 'message': ''})
+			return JsonResponse({'result': 'Success', 'message': '', 'refresh': True})
 		except Exception as e:
+			print(e)
 			return JsonResponse({'result': 'Failed', 'message': 'User id not found'})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
 
+@login_required(redirect_field_name="requiresLogin")
 def addUser(request):
 	if not request.user.is_superuser:
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
 		data = request.POST
+
+		if data['email'] == "" or data['name'] == "" or data['entity'] == "" or data['password'] == "":
+			return JsonResponse({'result': 'Failed', 'message': 'Deve preencher todos os campos na criação de um utilizador.'})
 		
 		user = User()
+		userExists = usernameExists(data['email'])
+		if userExists != None:
+			return JsonResponse({'result': 'Failed', 'message': 'Este email já pertence a outro utilizador'})
+
 		user.email = user.username = data['email']
-		user.entity = models.Entity(name=data['entity'])
 		user.first_name = data['name']
+		user.is_active = False if data['active'] == "false" else True
+		user.is_superuser = False if data['superuser'] == "false" else True
+		if data['password'] != "":
+			user.set_password(data['password'])
+		user.save()
+		user.entity.name = data['entity']
 		user.save()
 		return JsonResponse({'result': 'Success', 'message': '', 'data': {'id': user.id}})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
 
+@login_required(redirect_field_name="requiresLogin")
 def deleteUser(request):
 	if not request.user.is_superuser:
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
@@ -193,14 +239,128 @@ def deleteUser(request):
 		data = request.POST
 		try:
 			user = User.objects.get(id=data['id'])
+			Meeting.objects.filter(user=data['id']).delete()
 			user.delete()
-			return JsonResponse({'result': 'Success', 'message': ''})
+			return JsonResponse({'result': 'Success', 'message': '', 'refresh': True})
 		except Exception as e:
 			return JsonResponse({'result': 'Failed', 'message': 'User id not found'})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
 
-	
+@login_required(redirect_field_name="requiresLogin")
+def editRoom(request):
+	if not request.user.is_superuser:
+		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
+
+	if request.method == 'POST':
+		data = request.POST
+		print('Edit room')
+		try:
+			room = models.Room.objects.get(id=data['id'])
+			was_active = room.active
+			room.name = data['name']
+			room.description = data['description']
+			room.active = False if data['active'] == "false" else True
+			if was_active and not room.active:
+				deactivateRoom(room)
+			elif not was_active and room.active:
+				activateRoom(room)
+			room.save()
+			return JsonResponse({'result': 'Success', 'message': '', 'refresh': True})
+		except Exception as e:
+			print(e)
+			return JsonResponse({'result': 'Failed', 'message': 'Room id not found'})
+
+	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
+
+@login_required(redirect_field_name="requiresLogin")
+def addRoom(request):
+	if not request.user.is_superuser:
+		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
+
+	if request.method == 'POST':
+		data = request.POST
+		
+		room = Room()
+		room.name = data['name']
+		room.description = data['description']
+		room.active = False if data['active'] == "false" else True
+		room.color = getNewColor()
+		room.save()
+		return JsonResponse({'result': 'Success', 'message': '', 'data': {'id': room.id}})
+
+	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
+
+@login_required(redirect_field_name="requiresLogin")
+def deleteRoom(request):
+	if not request.user.is_superuser:
+		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
+
+	if request.method == 'POST':
+		data = request.POST
+		try:
+			room = Room.objects.get(id=data['id'])
+			Meeting.objects.filter(room=data['id']).delete()
+			room.delete()
+			return JsonResponse({'result': 'Success', 'message': '', 'refresh': True})
+		except Exception as e:
+			return JsonResponse({'result': 'Failed', 'message': 'Room id not found'})
+
+	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
+
+@login_required(redirect_field_name="requiresLogin")
+def activeRooms(request):
+	if request.method == 'GET':
+		data = request.GET
+		try:
+			start = parseDatetime(data['start'])
+			end = parseDatetime(data['end'])
+			rooms = roomsInInterval(start, end)
+			_, roomData = getCalendar(request)
+
+			parsedRooms = []
+			for r in rooms:
+				color = GREY
+				if r.active:
+					color = r.color.value
+				title = r.name
+				if not r.active:
+					title += ' (Indisponível)'
+
+				parsedRooms.append({'title': title, 'description': r.description, 'id': r.id, 'eventColor': color, 'active': r.active})
+
+			return JsonResponse({'result': 'Success', 'message': '', 'data': {'rooms': parsedRooms} })
+		except Exception as e:
+			print(e)
+			return JsonResponse({'result': 'Failed', 'message': str(e)})
+
+	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})	
+
+@login_required(redirect_field_name="requiresLogin")
+def changePassword(request):
+	if request.method == 'POST':
+		data = request.POST
+		user = None
+		if 'currentPassword' not in data or 'newPassword' not in data:
+			return JsonResponse({'result': 'Failed', 'message': 'Missing arguments'})
+		try:
+			user = User.objects.get(id=request.user.id, is_active=True)
+		except Exception as e:
+			print(str(e))
+			return JsonResponse({'result': 'Failed', 'message': 'Login as a valid user required'})
+		
+		print(data)
+		checkPass = user.check_password(data['currentPassword'])
+		if not checkPass:
+			return JsonResponse({'result': 'Failed', 'message': 'A password actual está errada.'})
+		user.set_password(data['newPassword'])
+		user.save()
+		print(user.username, )
+		user = auth.authenticate(username=user.username, password=data['newPassword'])
+		auth.login(request, user)
+		return JsonResponse({'result': 'Success', 'message': ''})
+
+	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
 
 urlpatterns = [
 	url(r'^auth', authForm, name='authForm'),
@@ -214,4 +374,11 @@ urlpatterns = [
 	url(r'^addUser', addUser, name='addUser'),
 	url(r'^editUser', editUser, name='editUser'),
 	url(r'^deleteUser', deleteUser, name='deleteUser'),
+
+	url(r'^addRoom', addRoom, name='addRoom'),
+	url(r'^editRoom', editRoom, name='editRoom'),
+	url(r'^deleteRoom', deleteRoom, name='deleteRoom'),
+
+	url(r'^activeRooms', activeRooms, name='activeRooms'),
+	url(r'^changePassword', changePassword, name='changePassword'),
 ]

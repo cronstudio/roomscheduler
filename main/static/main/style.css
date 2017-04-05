@@ -1,5 +1,5 @@
 body { 
-    padding-top: 65px; 
+    padding-top: 100px;
 }
 .login-dp{
     min-width: 250px;
@@ -90,4 +90,53 @@ body {
 
 .fixpanel{
     padding-top: 15px;
+}
+
+.nopadding {
+   padding: 0 !important;
+   margin: 0 !important;
+}
+
+.table-bordered tr:last-child > td{
+    border-top:  solid 3px #2255dd !important;
+    border-bottom: solid 3px #2255dd !important;
+}
+
+.table-bordered tr:last-child > td:last-child{
+    border-right: solid 3px #2255dd !important;
+}
+
+.table-bordered tr:last-child > td:first-child{
+    border-left: solid 3px #2255dd !important;
+}
+
+.input-inline{
+    width: 80% !important;
+}
+
+.vcenter{
+    padding-top: 8px;
+    display:table-cell;
+    vertical-align:middle;
+}
+
+.event-title{
+    padding-top: 4px;
+    padding-left: 3px;
+}
+
+.fc-cell-content {
+     min-height: 36px !important;
+}
+
+.fc-center{
+    padding-top: 8px;
+}
+
+.form-control.bg-danger {
+    background-color: #f2dede; 
+}
+
+.space{
+    padding-bottom: 14px;
 }

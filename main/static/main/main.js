@@ -12,20 +12,23 @@ function serializedArray(data){
 }
 
 function updateMeeting(event, revertFunc){
-  E = event;
   var data = {};
   data.csrfmiddlewaretoken = getCookie('csrftoken');
   data.id = event.data.id;
   data.description = event.data.description;
   data.date = event.start.format("DD-MM-YYYY");
   data.time = event.start.format("HH:mm");
-  var d = moment.duration(E.end.diff(E.start));
+  var d = moment.duration(event.end.diff(event.start));
   data.duration = Math.floor(d.asMinutes() / 60) + ":" + d.asMinutes() % 60;
-
   data.room = event.resourceId;
-  console.log(data);
+  if(d.asMinutes() > 60*8){
+    revertFunc();
+    return;
+  }
 
   arrData = serializedArray(data);
+  selectedEvent = event;
+  meetingAction = 'edit';
   postMeeting('api/editMeeting', arrData, function(){revertFunc()}, null);
 }
 
@@ -43,11 +46,17 @@ function postMeeting(url, postData, onError, onSuccess){
     success: function(data){
       updateCsrf();
       if(data.result == "Success"){
-        console.log("Meeting posted with success", data);
         $("#myModal").modal('hide');
-        if(onSuccess != null)
+        if(meetingAction == 'edit'){
+          for(var k in data.data)
+            selectedEvent[k] = data.data[k];
+          $('#calendar').fullCalendar('updateEvent', selectedEvent, true);
+        }else{
+          $('#calendar').fullCalendar('renderEvent', data.data, true);
+        }
+        if(onSuccess != null){
           onSuccess(data);
-        fetchCalendar();
+        }
       }else{
         console.log("Meeting posted with error", data.message);
         $("#meeting-error").text(data.message);
@@ -59,15 +68,15 @@ function postMeeting(url, postData, onError, onSuccess){
   });
 }
 
-function actionToUrl(action){
-  return 'api/' + action + 'User';
+function actionToUrl(action, model){
+  return 'api/' + action + model;
 }
 
 function postUser(action, postData, onError, onSuccess){
   postData.push({'name': 'csrfmiddlewaretoken', 'value': getCookie('csrftoken')})
   $.ajax({
     type: "POST",
-    url: actionToUrl(action),
+    url: actionToUrl(action, 'User'),
     data: postData,
     error: function(e, data){
       if(onError != null)
@@ -80,6 +89,32 @@ function postUser(action, postData, onError, onSuccess){
           onSuccess(data);
       }else{
         console.log("User posted with error", data.message);
+        if(onError != null){
+          onError(data);
+        }
+      }
+      
+     }
+  });
+}
+
+function postRoom(action, postData, onError, onSuccess){
+  postData.push({'name': 'csrfmiddlewaretoken', 'value': getCookie('csrftoken')})
+  $.ajax({
+    type: "POST",
+    url: actionToUrl(action, 'Room'),
+    data: postData,
+    error: function(e, data){
+      if(onError != null)
+        onError(data);
+    },
+    success: function(data){
+      if(data.result == "Success"){
+        console.log("Room posted with success", data);
+        if(onSuccess != null)
+          onSuccess(data);
+      }else{
+        console.log("Room posted with error", data.message);
         if(onError != null)
           onError(data);
       }
@@ -90,12 +125,13 @@ function postUser(action, postData, onError, onSuccess){
 
 function meetingDescriptionChanged(){
   var view = $("#meeting-form").find('textarea[name=description]');
-  V = view;
   if(view.val() == ""){
     $(view.parent()).find('span').removeClass('hidden');
+    view.addClass('bg-danger');
     return false;
   }else{
     $(view.parent()).find('span').addClass('hidden');
+    view.removeClass('bg-danger');
     return true;
   }
 
@@ -148,6 +184,27 @@ function addCalendarResources(arr){
     $('#calendar').fullCalendar('addResource', arr[i]);
 }
 
+function updateCalendarResources(nRes){
+  orig = $('#calendar').fullCalendar('getResources');
+  res = {};
+  for(var i=0; i<orig.length; i++)
+    res[orig[i].id] = true;
+  console.log(res);
+  console.log(nRes);
+
+  for(var i=0; i<nRes.length; i++){ // new resources
+    if(nRes[i].id in res){
+      delete res[nRes[i].id];
+    }else{
+      $('#calendar').fullCalendar('addResource', nRes[i]);
+    }
+  }
+  console.log(res);
+  for(var k in res){ // old resources that are no longer present
+    $('#calendar').fullCalendar('removeResource', k);
+  }
+}
+
 function fetchCalendar(){
   $.ajax({
     type: "GET",
@@ -163,14 +220,12 @@ function fetchCalendar(){
         R = data.rooms;
 
         for(var i=0; i<data.meetings.length; i++){
-          $('#calendar').fullCalendar( 'renderEvent', data.meetings[i], true);
+          $('#calendar').fullCalendar('renderEvent', data.meetings[i], true);
         }
       }
     }
   });
 }
-
-console.log("JS loaded");
 
 function TabSystem(buttons, containers){
   mButtons = {}
@@ -180,9 +235,12 @@ function TabSystem(buttons, containers){
     $(buttons[i]).click(function(e){
       var container = mButtons['#' + e.currentTarget.id];
       for(var i=0; i<containers.length; i++){
-        if(containers[i] != container)
+        if(containers[i] != container){
           $(containers[i]).addClass('hidden');
+          $(buttons[i]).removeClass('active');
+        }
       }
+      $('#' + e.currentTarget.id).addClass('active');
       $(container).removeClass('hidden');
     })
   }

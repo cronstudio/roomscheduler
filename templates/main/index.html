@@ -1,76 +1,85 @@
 {% load static %}
 
-
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" crossorigin="anonymous">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" crossorigin="anonymous">
-<script src='/static/main/cal/jquery.min.js'></script>
+<script src='{% static "main/cal/jquery.min.js" %}'></script>
 
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
-<link rel="stylesheet" type="text/css" href="{% static 'main/style.css' %}" />
 <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{% static 'main/style.css' %}" />
 
-<link href='/static/main/cal/fullcalendar.min.css' rel='stylesheet' />
-<link href='/static/main/cal/fullcalendar.print.min.css' rel='stylesheet' media='print' />
-<link href='/static/main/scheduler.min.css' rel='stylesheet' />
-<script src='/static/main/cal/moment.min.js'></script>
-<script src='/static/main/cal/fullcalendar.min.js'></script>
-<script src='/static/main/scheduler.min.js'></script>
-<script src='/static/main/locale/pt.js'></script>
-
+<link href='{% static "main/cal/fullcalendar.min.css" %}' rel='stylesheet' />
+<link href='{% static "main/cal/fullcalendar.print.min.css" %}' rel='stylesheet' media='print' />
+<link href='{% static "main/scheduler.min.css" %}' rel='stylesheet' />
+<script src='{% static "main/cal/moment.min.js" %}'></script>
+<script src='{% static "main/cal/fullcalendar.min.js" %}'></script>
+<script src='{% static "main/scheduler.min.js" %}'></script>
+<script src='{% static "main/locale/pt.js" %}'></script>
 
 <script type="text/javascript" src="{% static 'main/bootstrap-datetimepicker.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'main/bootstrap-datetimepicker.min.css' %}"/>
+<link href='{% static "main/bootstrap-toggle.min.css" %}' rel="stylesheet">
+<script src='{% static "main/bootstrap-toggle.min.js" %}'></script>
+<script src='{% static "main/bootstrap-notify.js" %}'></script>
 
 <script src="{% static 'main/main.js' %}"></script>
 
 <head>
-  <title>Gestão de Espaços CETEC</title>
+  <title>Reserva de Recursos CETEC</title>
 </head>
 
 <body>
+
 <nav class="navbar navbar-default navbar-inverse navbar-fixed-top" role="navigation">
   <div class="container-fluid">
-  <!-- Brand and toggle get grouped for better mobile display -->
+    <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
-      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Reserva de Recursos CETEC</a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav navbar">
-        <li>
-          <a href="">Reserva de Espaços CETEC</a>
-        </li>
-      </ul>
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       {% if isSuperUser %}
       <ul class="nav navbar-nav">
-        <li id="show-calendar" class="" >
-          <a href="#"><b>Calendário</b></span></a>
+        <li id="show-calendar" class="tab-link" >
+          <a href="/calendar"><b>Calendário</b></span></a>
         </li>
       </ul>
         <ul class="nav navbar-nav">
-          <li id="show-users" class="" >
-            <a href="#"><b>Utilizadores</b></span></a>
+          <li id="show-users" class="tab-link" >
+            <a href="/users"><b>Utilizadores</b></span></a>
           </li>
         </ul>
         <ul class="nav navbar-nav">
-          <li id="show-rooms" class="" >
-            <a href="#"><b>Recursos</b></span></a>
+          <li id="show-rooms" class="tab-link" >
+            <a href="/resources"><b>Recursos</b></span></a>
           </li>
         </ul>
       {% endif %}
-      
       <ul class="nav navbar-nav navbar-right">
         <li id="logoutDropdown" class="dropdown {% if loggedIn is False %}hidden{% endif %}" >
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> {{ user.first_name }} </b> <span class="caret"></span></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b> {{user.first_name}} </b> <span class="caret"></span></a>
           <ul class="login-dp dropdown-menu">
+            <li>
+              <div class="row space">
+                <div class="col-md-12">
+                  <button id="change-password-btn" class="btn btn-warning btn-block" onclick="$('#passwordModal').modal('show');" >Alterar Password</button>
+                </div>
+              </div>
+            </li>
             <li>
               <div class="row">
                 <div class="col-md-12">
                   <form id="logout-form" class="form" role="form" method="post" action="auth" accept-charset="UTF-8">
                     {% csrf_token %}
                     <div class="form-group">
-                       <button type="submit" name="action" value="logout" class="btn btn-warning btn-block">Sair</button>
+                       <button type="submit" name="action" value="logout" class="btn btn-primary btn-block">Sair</button>
                     </div>
                     <input id="form-action" type="hidden" name="action" value="logout">
                   </form>
@@ -80,38 +89,47 @@
           </ul>
         </li>
       </ul>
-    </div>
-  </div>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
 </nav>
 
 <div id="users-tab" class="hidden">
   <div class="container">
     <h2>Gestão de Utilizadores</h2>
-    <table id="users-table" class="table table-bordered">
+    <table id="users-table" class="table table-bordered sortable-table">
       <thead>
         <tr>
-          <th>Nome</th>
-          <th>Email</th>
-          <th>Entidade</th>
+          <th>Nome <a class="sortable-col"> <span> <i class="fa fa-fw fa-sort"> </i> </span> </a> </th>
+          <th>Email <a class="sortable-col"> <span> <i class="fa fa-fw fa-sort"> </i> </span> </a> </th>
+          <th>Entidade <a class="sortable-col"> <span> <i class="fa fa-fw fa-sort"> </i> </span> </a> </th>
+          <th>Password </th>
+          <th>Estado <a class="sortable-col"> <span> <i class="fa fa-fw fa-sort"> </i> </span> </a> </th>
+          <th class="fit">Painel de Administração</th>
           <th>Acções</th>
         </tr>
       </thead>
-      <tbody id="users-table-body">
+      <tbody>
         {% for u in users %}
         <tr value="{{u.id}}" class="">
           <td contenteditable name="name">{{u.name}}</td>
           <td contenteditable name="email">{{u.email}}</td>
           <td contenteditable name="entity">{{u.entity}}</td>
+          <td contenteditable name="password"></td>
+          <td > <input autocomplete="off" name="active" {% if u.active %} checked {% endif %} data-toggle="toggle" type="checkbox" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"></td>
+          <td > <input autocomplete="off" name="superuser" {% if u.superuser %} checked {% endif %} data-toggle="toggle" type="checkbox" data-onstyle="danger" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"></td>
           <td>
-            <a href="" class="save-user"><span class="glyphicon glyphicon-floppy-disk"></span></a>
-            <a href="" class="delete-user"><span class="glyphicon glyphicon-trash"></span></a>
+            <a href="" title="Guardar alterações" class="save-user"><span class="glyphicon glyphicon-floppy-disk"></span></a>
+            <a href="" title="Apagar utilizador" class="delete-user"><span class="glyphicon glyphicon-trash"></span></a>
           </td>
         </tr>
         {% endfor %}
-        <tr value="">
+        <tr class="lastrow" value="">
           <td contenteditable name="name"> </td>
           <td contenteditable name="email"> </td>
           <td contenteditable name="entity"> </td>
+          <td contenteditable name="password"></td>
+          <td > <input autocomplete="off" name="active" checked data-toggle="toggle" type="checkbox" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>
+          <td > <input autocomplete="off" name="superuser" data-toggle="toggle" type="checkbox" data-onstyle="danger" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>
           <td>
             <a href="" id="add-user"><span style="font-size:1.5em;" class="glyphicon glyphicon-large glyphicon-plus"></span></a>
           </td>
@@ -121,11 +139,45 @@
   </div>
 </div>
 
-<div id='calendar-tab'>
+<div id='calendar-tab' class="">
   <div id='calendar'></div>
 </div>
 
-<div id='rooms-tab'>
+<div id='rooms-tab' class="hidden">
+  <div class="container">
+    <h2>Gestão de Recursos</h2>
+    <table id="rooms-table" class="table table-bordered sortable-table">
+      <thead>
+        <tr>
+          <th>Nome <a class="sortable-col"> <span> <i class="fa fa-fw fa-sort"> </i> </span> </a> </th>
+          <th>Descrição</th>
+          <th>Estado <a class="sortable-col"> <span> <i class="fa fa-fw fa-sort"> </i> </span> </a></th>
+          <th>Acções</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rooms %}
+          <tr value="{{r.id}}" class="">
+            <td contenteditable name="name">{{r.title}}</td>
+            <td contenteditable name="description">{{r.description}}</td>
+            <td > <input autocomplete="off" name="active" {% if r.active %} checked {% endif %} data-toggle="toggle" type="checkbox" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>
+            <td>
+              <a href="" title="Guardar alterações" class="save-room"><span class="glyphicon glyphicon-floppy-disk"></span></a>
+              <a href="" title="Apagar recurso" class="delete-room"><span class="glyphicon glyphicon-trash"></span></a>
+            </td>
+          </tr>
+        {% endfor %}
+        <tr value="">
+          <td contenteditable name="name"> </td>
+          <td contenteditable name="description"> </td>
+          <td > <input autocomplete="off" name="active" checked data-toggle="toggle" type="checkbox" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>
+          <td>
+            <a href="" id="add-room"><span style="font-size:1.5em;" class="glyphicon glyphicon-large glyphicon-plus"></span></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Modal -->
@@ -145,7 +197,7 @@
         <form id="meeting-form">
           {% csrf_token %}
           <div class="form-group">
-            <label class="control-label" for="roomSelect">Espaço:</label>
+            <label class="control-label" for="roomSelect">Recurso:</label>
             <select class="fixselect form-control selectpicker" name='room' id="roomSelect">
             </select>
           </div>
@@ -166,21 +218,31 @@
           <div class="form-group has-feedback">
             <label class="control-label" for="meeting-form-time">Hora de Início:</label>
             <div class='input-group date' id='eventTime'>
+              <!-- -->
               <input name='time' type='text' class="form-control" id="meeting-form-time"/>
               <span class="input-group-addon">
                   <span class="glyphicon glyphicon-time"></span>
               </span>
             </div>
           </div>
+
           <div class="form-group has-feedback">
             <label class="control-label" for="meeting-form-duration">Duração:</label>
-            <div class='input-group date' id='eventDuration'>
-              <input name='duration' type='text' class="form-control" id="meeting-form-duration"/>
-              <span class="input-group-addon">
-                <span class="glyphicon glyphicon-hourglass"></span>
-              </span>
-            </div>
+              <div class="">
+                <div class="col-md-8 vcenter">
+                  <input id="meeting-duration-slider" class="" type="range" min="10" step="10" max="480" value="60" oninput="sliderChanged(this)">
+                </div>
+                <div class='col-md-4 input-group date' id='eventDuration'>
+                  <input name='duration' type='text' class="form-control" id="meeting-form-duration"/>
+                  <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-hourglass"></span>
+                  </span>
+                
+                </div>
+                
+              </div>
           </div>
+          
           <div class="help-block text-right error-message"><b id="meeting-error"></b></div>
       
           <div class="modal-footer">
@@ -195,6 +257,69 @@
   </div>
 </div>
 
+<div id="passwordModal" class="modal fade">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header modal-header-confirm">
+          <h4 id="modal-title" class="modal-title ng-binding">
+          Alterar password
+              <a title="Close">
+                <i class="glyphicon glyphicon-remove icon-arrow-right pull-right close" data-dismiss="modal" aria-label="Close" ng-click="CloseModal()"></i>
+              </a> 
+          </h4>
+      </div>
+      
+      <div class="modal-body">
+        <form id="password-form">
+          <input type="text" name="username" value="{{user.email}}" hidden></input>
+          {% csrf_token %}
+          <div class="form-group has-feedback">
+            <label class="control-label" for="password-form" onchange="">Password Actual:</label>
+            <input class="form-control" type="password" name="currentPassword" id="currentPassword"></input>
+            <span class="fixtooltip glyphicon glyphicon-warning-sign form-control-feedback hidden" aria-hidden="true" data-toggle="tooltip" title="Preencha a descrição da reunião"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <label class="control-label" for="password-form" onchange="">Nova Password:</label>
+            <input class="form-control" type="password" name="newPassword" id="newPassword"></input>
+            <span class="fixtooltip glyphicon glyphicon-warning-sign form-control-feedback hidden" aria-hidden="true" data-toggle="tooltip" title="Preencha a descrição da reunião"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <label class="control-label" for="password-form" onchange="">Nova Password (novamente):</label>
+            <input class="form-control" type="password" name="passwordAgain" id="passwordAgain"></input>
+            <span class="fixtooltip glyphicon glyphicon-warning-sign form-control-feedback hidden" aria-hidden="true" data-toggle="tooltip" title="Preencha a descrição da reunião"></span>
+          </div>
+          
+          <div class="help-block text-right error-message"><b id="password-error"></b></div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" id="change-password-btn">Guardar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="error-modal" class="modal fade">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header modal-header-confirm">
+          <h4 id="modal-title" class="modal-title ng-binding">
+            Acção Inválida
+              <a title="Close">
+                <i class="glyphicon glyphicon-remove icon-arrow-right pull-right close" data-dismiss="modal" aria-label="Close" ng-click="CloseModal()"></i>
+              </a> 
+          </h4>
+      </div>
+      
+      <div class="modal-body">
+        Não é possível criar eventos no passado.
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
   meetingAction = 'create';
   selectedEvent = null;
@@ -204,6 +329,16 @@
   $(".submitAuthBtn").click(function(e){
     $("#form-action").val(e.target.value);
   })
+
+  function fetchParentByTag(target, tag){
+    while(target.tagName != tag)
+      target = target.parentNode;
+    return $(target);
+  }
+
+  function tableHead(element){
+    return fetchParentByTag(element, "TR");
+  }
 
   $("#logout-form").submit(function(e) {
     e.preventDefault(); // avoid to execute the actual submit of the form.
@@ -224,9 +359,69 @@
     });
   });
 
-  //$("#meeting-form").submit(function(e) {
+  function sortTable(table, index, ascending){
+    tbl = table.tBodies[0];
+    var store = [];
+    R = tbl.rows;
+    for(var i=0, len=tbl.rows.length; i<len; i++){
+        var row = tbl.rows[i];
+        var cell = row.cells[index];
+        var sortnr = ''; //cell.textContent;
+        for(var j=0; j<cell.childNodes.length; j++){
+          if(cell.childNodes[j].nodeType == 3)
+            sortnr += cell.childNodes[j].textContent;
+        }
+        if(i == len-1)
+          sortnr = null;
+        else if(/^\s*$/.test(sortnr))
+          sortnr = $(row.cells[index]).children("div[class*='toggle']").hasClass('off');
+        store.push([sortnr, row]);
+    }
+    store.sort(function(x,y){
+      if(x[0] == null)
+        return true;
+      else if(y[0] == null)
+        return false;
+      return x[0] > y[0] ? !ascending : ascending;
+    });
+    for(var i=0, len=store.length; i<len; i++){
+        tbl.appendChild(store[i][1]);
+    }
+    store = null;
+  }
+
+  sortableTables = {
+    'users-table': {colIndex: 4, ascending: false},
+    'rooms-table': {colIndex: 2, ascending: false},
+  }
+
+  function setSortIcon(s, p){
+    console.log(s, p);
+    if(s.hasClass('fa-sort')){
+      p.find('i').removeClass('fa-sort-asc');
+      p.find('i').removeClass('fa-sort-desc');
+      p.find('i').addClass('fa-sort');
+      s.removeClass('fa-sort');
+      s.addClass('fa-sort-asc');
+    }
+    s.toggleClass('fa-sort-asc fa-sort-desc');
+  }
+
+  $(".sortable-col").click(function(e){
+    var colIndex = this.parentNode.cellIndex;
+    var s = $(this).find('i')[0];
+    var p = tableHead(this);
+    s = $(s);
+    setSortIcon(s, p);
+    var tableId = fetchParentByTag(s.get(0), "TABLE").attr('id');
+    var ascending = s.hasClass('fa-sort-asc')
+    sortTable(document.getElementById(tableId), colIndex, ascending);
+    sortableTables[tableId].colIndex = colIndex;
+    sortableTables[tableId].ascending = ascending;
+  });
+
   $("#saveMeetingBtn").click(function(e) {
-    e.preventDefault(); // avoid to execute the actual submit of the form.
+    e.preventDefault();
 
     if(!validateMeetingForm()){
       $("#meeting-error").text("Corrija os erros e submeta novamente");
@@ -241,19 +436,12 @@
       url = 'api/editMeeting';
       postData.push({name: 'id', value: selectedEvent.data.id});
     }
-    postMeeting(url, postData);
+    postMeeting(url, postData, null, null);
     
   });
 
-  /*$('#show-users').click(function(e){
-    $('#users-tab').removeClass('hidden');
-    $('#calendar-tab').addClass('hidden');
-  })*/
-
-  var tabSystem = TabSystem(["#show-calendar", "#show-users", "#show-rooms"], ['#calendar-tab', '#users-tab', '#rooms-tab']);
-
   $("#deleteMeetingBtn").click(function(e) {
-    e.preventDefault(); // avoid to execute the actual submit of the form.
+    e.preventDefault();
 
     if(confirm("Tem a certeza que pretende apagar esta reunião?")){
       $.ajax({
@@ -267,8 +455,8 @@
           updateCsrf();
           if(data.result == "Success"){
             console.log("Meeting deleted successfully", data);
+            $('#calendar').fullCalendar('removeEvents',selectedEvent._id);
             $("#myModal").modal('hide');
-            fetchCalendar();
           }else{
             console.log("Delete meeting failed", data.message);
             $("#meeting-error").text(data.message);
@@ -280,32 +468,89 @@
     }
   });
 
-  function parseUserData(parent){
+  $("#password-form").submit(function(e){
+    e.preventDefault();
+    var postData = $("#password-form").serializeArray();
+
+    var np = $("#password-form").find('input[name=newPassword]').val();
+    var npc = $("#password-form").find('input[name=passwordAgain]').val();
+    if(np != npc){
+      console.log(np, npc);
+      $("#password-error").text("A verificação de password deve corresponder à introduzida anteriormente.");
+      return;
+    }
+    if(np.length < 6){
+      $("#password-error").text("A password introduzida deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "api/changePassword",
+      data: postData,
+      error: function(e, data){
+        updateCsrf();
+      },
+      success: function(data){
+        updateCsrf();
+        if(data.result == "Success"){
+          console.log("Password changed successfully", data);
+          $("#passwordModal").modal('hide');
+        }else{
+          console.log("Change password failed", data.message);
+          $("#password-error").text(data.message);
+        }
+        
+       }
+    });
+  })
+
+  /*$("#change-password-btn").click(function(){
+
+  })*/
+
+  function parseRowData(parent){
     P = parent;
     var id = parent.attr('value');
 
     data = [{name: 'id', value: id}]
+    var toggles = P.find('.toggle > input');
+    for(var i=0; i<toggles.length; i++){
+      data.push({name: $(toggles[i]).attr('name'), value: !$(toggles[i]).parent().hasClass('off')});
+    }
+
     elements = parent.find("td");
     for(var i=0; i<elements.length; i++){
       var e = $(elements[i]);
       if(e.attr('name'))
         data.push({'name': e.attr('name'), 'value': e.text()});
     }
+
     return data;
+  }
+
+  function initToggle(id){
+    $(id).bootstrapToggle();
+    $(id).removeAttr('id');
   }
 
   $(".save-user").click(function(e){
     e.preventDefault();
     E = e;
     var parent = $(e.target.parentElement.parentElement.parentElement);
-    var data = parseUserData(parent);
+    var data = parseRowData(parent);
 
-    postUser('edit', data, function(){
+    postUser('edit', data, function(data){
       parent.addClass('bg-danger');
-    }, function(){
+      $.notify({ message: data.message},{ type: 'danger'});
+    }, function(data){
       parent.removeClass('bg-warning');
       parent.removeClass('bg-danger');
       parent.addClass('bg-success');
+      if(data.refresh)
+        fetchCalendar();
+
+      updateTables();
     });
 
   });
@@ -314,14 +559,13 @@
     e.preventDefault();
 
     var parent = $(e.target.parentElement.parentElement.parentElement);
-    var data = parseUserData(parent);
+    var data = parseRowData(parent);
 
-    postUser('add', data, function(){
+    postUser('add', data, function(data){
       parent.addClass('bg-danger');
+      D = data;
+      $.notify({ message: data.message},{ type: 'danger'});
     }, function(response){
-      parent.removeClass('bg-warning');
-      parent.removeClass('bg-danger');
-      parent.addClass('bg-success');
 
       D = data;
       values = {}
@@ -332,29 +576,147 @@
           '<td contenteditable name="name">' + values['name'] + '</td>' +
           '<td contenteditable name="email">' + values['email'] + '</td>' +
           '<td contenteditable name="entity">' + values['entity'] + '</td>' +
+          '<td contenteditable name="password">' + values['password'] + '</td>' +
+          '<td > <input id="newCheckbox" autocomplete="off" name="active"' + (values['active'] ? 'checked' : '') + ' data-toggle="toggle" type="checkbox" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>' +
+          '<td > <input id="newCheckbox2" autocomplete="off" name="active"' + (values['superuser'] ? 'checked' : '') + ' data-toggle="toggle" type="checkbox" data-onstyle="danger" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>' +
           '<td>' +
             '<a href="" class="save-user"><span class="glyphicon glyphicon-floppy-disk"></span></a>' +
             '<a href="" class="delete-user"><span class="glyphicon glyphicon-trash"></span></a>' +
           '</td>' +
         '</tr>';
-      $('#users-table tr:last').before(element);
-      $('#users-table tr:last td:not(:last-child)').empty()
+      $('#users-table tr').eq(-1).before(element);
+      initToggle("#newCheckbox");
+      initToggle("#newCheckbox2");
+
+      var c = $('#users-table tr').eq(-1)[0];
+      $(c).find("td:nth-child(1), td:nth-child(2), td:nth-child(3)").empty();
+
+      updateTables();
+
+      parent.removeClass('bg-warning');
+      parent.removeClass('bg-danger');
     });
 
   });
 
   $(".delete-user").click(function(e){
     e.preventDefault();
-    E = e;
-    var parent = $(e.target.parentElement.parentElement.parentElement);
-    var data = parseUserData(parent);
+    if(confirm("Esta acção apaga o utilizador do sistema, juntamente com todos os eventos passados e presentes criados por ele. Tem a certeza que pretende continuar?")){
+      var parent = $(e.target.parentElement.parentElement.parentElement);
+      var data = parseRowData(parent);
 
-    postUser('delete', data, function(){}, function(){
-      parent.remove();
-    });
+      postUser('delete', data, function(){
+        $.notify({ message: 'Erro a apagar utilizador'},{ type: 'danger'});
+        if(data.refresh)
+          location.reload();
+      }, function(data){
+        parent.remove();
+        $.notify({ message: 'Utilizador apagado' },{ type: 'success'});
+        if(data.refresh)
+          fetchCalendar();
+
+        updateTables();
+      });
+    }
+    
   });
 
+
+  $(".save-room").click(function(e){
+    e.preventDefault();
+    var parent = $(e.target.parentElement.parentElement.parentElement);
+    var data = parseRowData(parent);
+
+    postRoom('edit', data, function(){
+      parent.addClass('bg-danger');
+    }, function(data){
+      parent.removeClass('bg-warning');
+      parent.removeClass('bg-danger');
+      parent.addClass('bg-success');
+      if(data.refresh)
+        fetchCalendar();
+
+      updateTables();
+    });
+
+  });
+
+
+  $("#add-room").click(function(e){
+    e.preventDefault();
+
+    var parent = $(e.target.parentElement.parentElement.parentElement);
+    var data = parseRowData(parent);
+
+    postRoom('add', data, function(){
+      parent.addClass('bg-danger');
+    }, function(response){
+
+      D = data;
+      values = {}
+      for(var i=0; i<data.length; i++){
+        values[data[i].name] = data[i].value;
+      }
+      var element = '<tr value="' + response.data.id +  '" class="">' +
+          '<td contenteditable name="name">' + values['name'] + '</td>' +
+          '<td contenteditable name="description">' + values['description'] + '</td>' +
+          '<td > <input id="newCheckbox" autocomplete="off" name="active"' + (values['active'] ? 'checked' : '') + ' data-toggle="toggle" type="checkbox" data-on="Activo" data-off="Inactivo" data-size="small" data-width="80"> </td>' +
+          '<td>' +
+            '<a href="" class="save-user"><span class="glyphicon glyphicon-floppy-disk"></span></a>' +
+            '<a href="" class="delete-user"><span class="glyphicon glyphicon-trash"></span></a>' +
+          '</td>' +
+        '</tr>';
+      $('#rooms-table tr').eq(-1).before(element);
+      initToggle("#newCheckbox");
+
+      var c = $('#rooms-table tr').eq(-1)[0];
+      $(c).find("td:nth-child(1), td:nth-child(2)").empty();
+
+      updateTables();
+
+      parent.removeClass('bg-warning');
+      parent.removeClass('bg-danger');
+
+      fetchCalendar();
+    });
+
+  });
+
+  $(".delete-room").click(function(e){
+    e.preventDefault();
+    if(confirm("Esta acção apaga este recurso do sistema, juntamente com todos os eventos passados e presentes a ele associados. Tem a certeza que pretende continuar?")){
+      var parent = $(e.target.parentElement.parentElement.parentElement);
+      var data = parseRowData(parent);
+
+      postRoom('delete', data, null, function(data){
+        parent.remove();
+        if(data.refresh)
+          fetchCalendar();
+      });
+    }
+  });
+
+  function sliderChanged(e){
+    var input = $("#meeting-form-duration");
+    var minutes = e.value % 60;
+    var hours = Math.floor(e.value / 60);
+    var s = "";
+    if(hours < 10)    s += "0" + hours;
+    else              s += "" + hours;
+    s += ":";
+    if(minutes < 10)  s += "0" + minutes;
+    else              s += "" + minutes;
+    input.val(s);
+
+  }
+
+  function time2Minutes(time){
+    var d = time.split(":");
+    return parseInt(d[0])*60 + parseInt(d[1]);
+  }
+
   function createModal(date, duration, resource){
+    $('#calendar').fullCalendar('unselect');
     $("#meeting-form").find("input[type=text], textarea").val("");
         meetingAction = 'create';
         selectedEvent = null;
@@ -377,7 +739,7 @@
                   .html(rooms[i].name)
               );
             }
-            if(resource.id)
+            if(resource != null || resource.id)
               $("#roomSelect").val(resource.id);
 
           }
@@ -389,8 +751,26 @@
         $('#eventDate').data('DateTimePicker').date(dateStr);
         $('#eventTime').data('DateTimePicker').date(timeStr);
         $('#eventDuration').data('DateTimePicker').date(duration);
+        D = duration;
+        $('#meeting-duration-slider').val(time2Minutes(duration));
         $('#deleteMeetingBtn').addClass('hidden');
         $('#myModal').modal('show');
+  }
+
+  function fetchRow(target){
+    while(target.tagName != "TR")
+      target = target.parentNode;
+    return target;
+  }
+
+  function updateTables(){
+    for(var id in sortableTables){
+      var col = sortableTables[id].colIndex
+      sortTable(document.getElementById(id), col, sortableTables[id].ascending);
+      var p = $("#" + id).find('th');
+      var s = $($("#" + id).find('th')[col]).find('i');
+      setSortIcon(s, p);
+    }
   }
 
   $(document).ready(function() {
@@ -398,8 +778,14 @@
         placement : 'top'
       });
 
-      $("#users-tab tr td").on("DOMSubtreeModified", function(e){
-        $(e.target.parentNode).addClass('bg-warning');
+
+      $("#users-tab td").on("DOMSubtreeModified", function(e){
+        var t = fetchRow(e.target);
+        $(t).addClass('bg-warning');
+      });
+      $("#rooms-tab td").on("DOMSubtreeModified", function(e){
+        var t = fetchRow(e.target);
+        $(t).addClass('bg-warning');
       });
 
     $('#calendar').fullCalendar({
@@ -408,13 +794,24 @@
         center: 'title',
         right: 'timelineDay,agendaWeek,month'
       },
+      allDaySlot: false,
       editable: true,
       defaultView: 'agendaWeek',
       locale: 'pt',
       eventOverlap: false,
       schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
-      resourceAreaWidth: '15%',
-      resourceLabelText: "Espaços",
+      resourceAreaWidth: '20%',
+      resourceLabelText: "Recursos",
+      views: {
+        timelineDay: {
+          titleFormat: 'dddd, D [de] MMMM [de] YYYY',
+          axisFormat: 'ddd hhhh[h]',
+          slotLabelFormat: [
+          'H[h]'
+          ],
+          columnFormat: 'ddd D.M',
+        }
+      },
       resources: [
         {% if loggedIn %}{% for r in rooms %}
           {
@@ -423,6 +820,18 @@
             eventColor: "{{r.eventColor}}",
           },{% endfor %}{% endif %}
       ],
+      eventRender: function(event, element) {
+        if(event.data != null){
+          element.find(".fc-title").remove();
+          var new_description =
+            '<div class="event-title">' + 
+              '<div> <b>' + event.title + '</b></div>' +
+              '<div>' + event.data.roomName + '</div>' +
+            '</div>';
+          element.append(new_description);
+        }
+      },
+      nowIndicator: true,
       events:[
       {% if loggedIn %}{% for m in meetings %}
           {
@@ -431,6 +840,8 @@
             end: "{{m.end}}",
             resourceId: "{{m.resourceId}}",
             editable: {{m.editable}},
+            startEditable: {{m.startEditable}},
+            durationEditable: {{m.durationEditable}},
             data: { {% for k,v in m.data.items %}
               {{k}}: "{{v}}",
             {% endfor %} }
@@ -446,30 +857,49 @@
         updateMeeting(event, revertFunc);
       },
       eventDrop: function(event, delta, revertFunc, jsEvent, ui, view){
+        console.log(delta);
         updateMeeting(event, revertFunc);
       },
       selectable: true,
       selectHelper: true,
       select: function(start, end, a, b, resource) {
-        //var title = prompt('Event Title:');
-        R = resource;
-        A = a;
-        B = b;
-        console.log(R, A, B);
-        var eventData = {
-          title: "",
-          start: start,
-          end: end
-        };
-        $('#calendar').fullCalendar('renderEvent', eventData, true);
+        if(moment().isAfter(start)){
+          $('#calendar').fullCalendar('unselect');
+          $('#error-modal').modal('show');
+        }else{
+          var eventData = {
+            title: "",
+            start: start,
+            end: end
+          };
+          //$('#calendar').fullCalendar('renderEvent', eventData, true);
 
-        var d = moment.duration(end.diff(start));
-        duration = Math.floor(d.asMinutes() / 60) + ":" + d.asMinutes() % 60;
-        createModal(start, duration, resource);
-        //$('#calendar').fullCalendar('unselect');
+          var d = moment.duration(end.diff(start));
+          duration = Math.floor(d.asMinutes() / 60) + ":" + d.asMinutes() % 60;
+          createModal(start, duration, resource);
+        }
+        
+      },
+      viewRender: function(view){
+        var dtFormat = "YYYY-MM-DD HH:mm";
+        if(view.name == "timelineDay"){
+          $.ajax({
+            type: "GET",
+            data: [{name: 'start', value: view.start.format(dtFormat)}, {name: 'end', value: view.end.format(dtFormat)}],
+            url: "api/activeRooms",
+            error: function(e, data){
+              console.log('error', e);
+            },
+            success: function(data){
+              console.log(data);
+              updateCalendarResources(data.data.rooms);
+              $('#calendar').fullCalendar('rerenderEvents');
+             }
+          });
+        }
+
       },
       eventClick: function(event, jsEvent, view){
-        console.log("Event Click");
         if(!event.editable)
           return;
 
@@ -495,7 +925,7 @@
               );
             }
             var modal = $("#myModal")
-            $('#modal-title').text("Editar reunião");
+            $('#modal-title').text("Editar reunião de " + event.data.entity);
             modal.find('textarea[name=description]').val(event.data.description);
             $('#eventDate').data('DateTimePicker').date(event.data.date);
             $('#eventTime').data('DateTimePicker').date(event.data.time);
@@ -504,18 +934,23 @@
 
             $('#deleteMeetingBtn').removeClass('hidden');
             $('#myModal').modal('show');
-
            }
         });
-
       }
     });
 
-    $('#calendar').fullCalendar('option', 'aspectRatio', 1.9);
-    if( "{{loggedIn}}" == "False")
-      $('#calendar').addClass('hidden');
+    $('#calendar').fullCalendar('option', 'aspectRatio', 1.7);
 
-  });
+    var tabSystem = TabSystem(["#show-calendar", "#show-users", "#show-rooms"], ['#calendar-tab', '#users-tab', '#rooms-tab']);
+    $('#calendar-tab').addClass('hidden');
+    $('#{{view}}-tab').removeClass('hidden');
+    $('#show-{{view}}').addClass('active');
+
+    $('.tab-link').click(function(e) {
+      window.history.pushState({}, {}, $(this).find('a').attr('href'));
+      return false;
+    });
+
     $(function () {
         $('#eventDate').datetimepicker({
           format: 'DD-MM-YYYY',
@@ -529,6 +964,20 @@
         });
     });
 
+    $("#eventDuration").on("dp.change", function(e) {
+      var min = e.date.hours() * 60 + e.date.minutes();
+      E = e;
+      if(min > 8*60){
+        e.date.hours(8);
+        e.date.minutes(0);
+        $('#eventDuration').data('DateTimePicker').date(e.date);
+      }
+      $('#meeting-duration-slider').val(e.date.hours() * 60 + e.date.minutes());
+    });
+
+    updateTables();
+
+  });
 
 </script>
 </body>

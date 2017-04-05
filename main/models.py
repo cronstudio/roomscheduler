@@ -3,8 +3,17 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+class Color(models.Model):
+	value = models.CharField(max_length=10)
+
+	def __str__(self):
+		return "Color(" + self.value + ")"
+
 class Room(models.Model):
 	name = models.CharField(max_length=64)
+	description = models.CharField(max_length=128)
+	active = models.BooleanField(default=True)
+	color = models.ForeignKey(Color)
 	def __str__(self):
 		return self.name
 
@@ -14,7 +23,7 @@ class Meeting(models.Model):
 	start = models.DateTimeField('start')
 	duration = models.FloatField()
 	room = models.ForeignKey(Room)
-
+	active = models.BooleanField(default=True)
 	def __str__(self):
 		return "By " + self.user.entity.name + " at " + self.room.name
 
