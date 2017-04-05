@@ -69,7 +69,7 @@
             <li>
               <div class="row space">
                 <div class="col-md-12">
-                  <button id="change-password-btn" class="btn btn-warning btn-block" onclick="$('#passwordModal').modal('show');" >Alterar Password</button>
+                  <button id="change-password-btn" class="btn btn-warning btn-block" onclick="createPasswordModal()" >Alterar Password</button>
                 </div>
               </div>
             </li>
@@ -261,11 +261,11 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header modal-header-confirm">
-          <h4 id="modal-title" class="modal-title ng-binding">
-          Alterar password
-              <a title="Close">
-                <i class="glyphicon glyphicon-remove icon-arrow-right pull-right close" data-dismiss="modal" aria-label="Close" ng-click="CloseModal()"></i>
-              </a> 
+          <h4 id="modal-title" class="modal-title ng-binding">Alterar password
+          <a title="Close">
+          <i class="glyphicon glyphicon-remove icon-arrow-right pull-right close" data-dismiss="modal" aria-label="Close" ng-click="CloseModal()">
+          </i>
+          </a>
           </h4>
       </div>
       
@@ -705,6 +705,10 @@
     return parseInt(d[0])*60 + parseInt(d[1]);
   }
 
+  function createPasswordModal(){
+    $('#passwordModal').modal('show');
+  }
+
   function createModal(date, duration, resource){
     $('#calendar').fullCalendar('unselect');
     $("#meeting-form").find("input[type=text], textarea").val("");
@@ -767,6 +771,12 @@
         placement : 'top'
       });
 
+      $('#myModal').on('shown.bs.modal', function (e) {
+        $('#meeting-form-description').focus();
+      });
+      $('#passwordModal').on('shown.bs.modal', function (e) {
+        $('#currentPassword').focus();
+      });
 
       $("#users-tab td").on("DOMSubtreeModified", function(e){
         var t = fetchRow(e.target);
