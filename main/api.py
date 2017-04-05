@@ -66,9 +66,6 @@ def createMeeting(request):
 
 @login_required(redirect_field_name="requiresLogin")
 def editMeeting(request):
-
-	print("Is super user?", request.user.is_superuser)
-	# TODO: check owner
 	if request.method == 'POST':
 		data = request.POST
 		start, duration = parseMeetingTime(data)
@@ -116,7 +113,6 @@ def login(request):
 	l = User.objects.filter(email=email)
 	if len(l) > 0:
 		found = User.objects.get(email=email)
-	print(email, password)
 	user = auth.authenticate(username=email, password=password)
 
 	response_data = {}
@@ -171,8 +167,6 @@ def editUser(request):
 	if request.method == 'POST':
 		data = request.POST
 		try:
-			print(data)
-			
 			if data['email'] == "" or data['name'] == "" or data['entity'] == "":
 				return JsonResponse({'result': 'Failed', 'message': 'Deve preencher todos os campos na edição de um utilizador'})
 
@@ -196,7 +190,6 @@ def editUser(request):
 			user.save()
 			return JsonResponse({'result': 'Success', 'message': '', 'refresh': True})
 		except Exception as e:
-			print(e)
 			return JsonResponse({'result': 'Failed', 'message': 'User id not found'})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
@@ -254,7 +247,6 @@ def editRoom(request):
 
 	if request.method == 'POST':
 		data = request.POST
-		print('Edit room')
 		try:
 			room = models.Room.objects.get(id=data['id'])
 			was_active = room.active
@@ -268,7 +260,6 @@ def editRoom(request):
 			room.save()
 			return JsonResponse({'result': 'Success', 'message': '', 'refresh': True})
 		except Exception as e:
-			print(e)
 			return JsonResponse({'result': 'Failed', 'message': 'Room id not found'})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})
@@ -331,7 +322,6 @@ def activeRooms(request):
 
 			return JsonResponse({'result': 'Success', 'message': '', 'data': {'rooms': parsedRooms} })
 		except Exception as e:
-			print(e)
 			return JsonResponse({'result': 'Failed', 'message': str(e)})
 
 	return JsonResponse({'result': 'Failed', 'message': 'Invalid http method: expected POST, received ' + request.method})	

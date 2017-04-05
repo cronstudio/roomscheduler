@@ -8,10 +8,7 @@ def checkMeetingData(orig, m):
 	e = m.start + timedelta(minutes=m.duration)
 	now = datetime.now()
 	now = timezone.localtime(now)
-	print(now)
 
-	print("current start: ", orig.start)
-	print("new start: ", m.start)
 	if orig == None or orig.start > now:
 		if m.start > now:
 			q = """SELECT * FROM main_meeting where room_id=%s and active=1 and not ((start < %s and datetime(start, '+' || duration || ' MINUTES') <= %s) or (start >= %s and datetime(start, '+'|| duration || ' MINUTES') > %s))"""
@@ -25,7 +22,6 @@ def checkMeetingData(orig, m):
 	else:
 		reason = 'Não é possível editar reuniões que já começaram'
 
-	print(reason)
 	return (False, reason)
 
 def roomsInInterval(s, e):

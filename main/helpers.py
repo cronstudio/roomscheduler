@@ -22,10 +22,7 @@ def parseMeetingTime(data):
 	duration = [int(i) for i in data['duration'].split(':')]
 	duration = duration[0] * 60 + duration[1]
 	start = datetime(date[2], date[1], date[0], time[0], time[1])
-	print('received date:', start.isoformat())
 	start = timezone.localtime(start)
-	print('proper date:', start.isoformat())
-
 	return start, duration
 
 def formatDate(dt):

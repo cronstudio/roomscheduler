@@ -84,7 +84,6 @@ function postUser(action, postData, onError, onSuccess){
     },
     success: function(data){
       if(data.result == "Success"){
-        console.log("User posted with success", data);
         if(onSuccess != null)
           onSuccess(data);
       }else{
@@ -110,7 +109,6 @@ function postRoom(action, postData, onError, onSuccess){
     },
     success: function(data){
       if(data.result == "Success"){
-        console.log("Room posted with success", data);
         if(onSuccess != null)
           onSuccess(data);
       }else{
@@ -189,9 +187,7 @@ function updateCalendarResources(nRes){
   res = {};
   for(var i=0; i<orig.length; i++)
     res[orig[i].id] = true;
-  console.log(res);
-  console.log(nRes);
-
+  
   for(var i=0; i<nRes.length; i++){ // new resources
     if(nRes[i].id in res){
       delete res[nRes[i].id];
@@ -199,7 +195,6 @@ function updateCalendarResources(nRes){
       $('#calendar').fullCalendar('addResource', nRes[i]);
     }
   }
-  console.log(res);
   for(var k in res){ // old resources that are no longer present
     $('#calendar').fullCalendar('removeResource', k);
   }

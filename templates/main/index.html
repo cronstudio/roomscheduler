@@ -341,13 +341,13 @@
   }
 
   $("#logout-form").submit(function(e) {
-    e.preventDefault(); // avoid to execute the actual submit of the form.
+    e.preventDefault();
     var postData = $("#logout-form").serialize();
 
     $.ajax({
       type: "POST",
       url: "api/auth",
-      data: postData, // serializes the form's elements.
+      data: postData,
       error: function(e, data){
         console.log('error', e);
         updateCsrf();
@@ -366,7 +366,7 @@
     for(var i=0, len=tbl.rows.length; i<len; i++){
         var row = tbl.rows[i];
         var cell = row.cells[index];
-        var sortnr = ''; //cell.textContent;
+        var sortnr = '';
         for(var j=0; j<cell.childNodes.length; j++){
           if(cell.childNodes[j].nodeType == 3)
             sortnr += cell.childNodes[j].textContent;
@@ -396,7 +396,6 @@
   }
 
   function setSortIcon(s, p){
-    console.log(s, p);
     if(s.hasClass('fa-sort')){
       p.find('i').removeClass('fa-sort-asc');
       p.find('i').removeClass('fa-sort-desc');
@@ -429,8 +428,7 @@
     }
 
     var postData = $("#meeting-form").serializeArray();
-    console.log(postData);
-
+    
     var url = 'api/createMeeting';
     if(meetingAction == 'edit'){
       url = 'api/editMeeting';
@@ -454,7 +452,6 @@
         success: function(data){
           updateCsrf();
           if(data.result == "Success"){
-            console.log("Meeting deleted successfully", data);
             $('#calendar').fullCalendar('removeEvents',selectedEvent._id);
             $("#myModal").modal('hide');
           }else{
@@ -475,7 +472,6 @@
     var np = $("#password-form").find('input[name=newPassword]').val();
     var npc = $("#password-form").find('input[name=passwordAgain]').val();
     if(np != npc){
-      console.log(np, npc);
       $("#password-error").text("A verificação de password deve corresponder à introduzida anteriormente.");
       return;
     }
@@ -494,20 +490,14 @@
       success: function(data){
         updateCsrf();
         if(data.result == "Success"){
-          console.log("Password changed successfully", data);
           $("#passwordModal").modal('hide');
         }else{
-          console.log("Change password failed", data.message);
           $("#password-error").text(data.message);
         }
         
        }
     });
   })
-
-  /*$("#change-password-btn").click(function(){
-
-  })*/
 
   function parseRowData(parent){
     P = parent;
@@ -729,7 +719,6 @@
             console.log('error', e);
           },
           success: function(data){
-            console.log(data);
             var rooms = data.rooms;
             removeOptions($('#roomSelect')[0]);
 
@@ -857,7 +846,6 @@
         updateMeeting(event, revertFunc);
       },
       eventDrop: function(event, delta, revertFunc, jsEvent, ui, view){
-        console.log(delta);
         updateMeeting(event, revertFunc);
       },
       selectable: true,
@@ -872,8 +860,7 @@
             start: start,
             end: end
           };
-          //$('#calendar').fullCalendar('renderEvent', eventData, true);
-
+          
           var d = moment.duration(end.diff(start));
           duration = Math.floor(d.asMinutes() / 60) + ":" + d.asMinutes() % 60;
           createModal(start, duration, resource);
@@ -891,7 +878,6 @@
               console.log('error', e);
             },
             success: function(data){
-              console.log(data);
               updateCalendarResources(data.data.rooms);
               $('#calendar').fullCalendar('rerenderEvents');
              }
@@ -914,7 +900,6 @@
             console.log('error', e);
           },
           success: function(data){
-            console.log(data);
             var rooms = data.rooms;
             removeOptions($('#roomSelect')[0]);
 

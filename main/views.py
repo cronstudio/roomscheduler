@@ -14,10 +14,6 @@ from main.data import checkMeetingData
 from main.helpers import getCalendar, getUsers
 from django.contrib.auth.decorators import user_passes_test
 
-def calendardemo(request):
-	template = loader.get_template('main/calendardemo.html')
-	return HttpResponse(template.render({}, request))
-
 def login(request):
 	template = loader.get_template('main/login.html')
 	return HttpResponse(template.render({}, request))
