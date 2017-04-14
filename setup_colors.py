@@ -12,3 +12,5 @@ for r in Room.objects.all():
 		if r.color == None:
 			r.color = Color.objects.get(value="#5aaf44")
 		r.save()
+
+print("Colors added!")

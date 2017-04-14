@@ -209,6 +209,11 @@ function fetchCalendar(){
     },
     success: function(data){
       if(data.result == 'Success'){
+        
+        var hidden = $('#calendar-tab').hasClass('hidden');
+        if(hidden)
+          $('#calendar-tab').removeClass('hidden');
+
         $('#calendar').fullCalendar('removeEvents');
         removeCalendarResources();
         addCalendarResources(data.rooms);
@@ -217,6 +222,8 @@ function fetchCalendar(){
         for(var i=0; i<data.meetings.length; i++){
           $('#calendar').fullCalendar('renderEvent', data.meetings[i], true);
         }
+        if(hidden)
+          $('#calendar-tab').addClass('hidden');
       }
     }
   });

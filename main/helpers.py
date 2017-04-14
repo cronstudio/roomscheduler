@@ -15,14 +15,14 @@ from django.utils.dateparse import parse_datetime
 
 #EVENT_COLORS = ["#5aaf44", "#397be5", "#c4210f", "#edc617", "#57b1c1", "#efc4d4", "#095122", "#9be20b"]
 GREY = "#aaaaaa"
+LOCALTZ = timezone.get_current_timezone()
 
 def parseMeetingTime(data):
 	date = [int(i) for i in data['date'].split('-')]
 	time = [int(i) for i in data['time'].split(':')]
 	duration = [int(i) for i in data['duration'].split(':')]
 	duration = duration[0] * 60 + duration[1]
-	start = datetime(date[2], date[1], date[0], time[0], time[1])
-	start = timezone.localtime(start)
+	start = datetime(date[2], date[1], date[0], time[0], time[1], tzinfo=LOCALTZ)
 	return start, duration
 
 def formatDate(dt):
@@ -54,8 +54,8 @@ def meeting2FCEvent(m, request): # output date: database utc to local timezone
 			durationEditable = True
 
 	
-	m.start = timezone.localtime(m.start)
-	endDate = timezone.localtime(endDate)
+	m.start = m.start
+	endDate = endDate
 	return {
 		'title': m.user.entity.name,
 		'start': str(m.start.isoformat()),
@@ -139,3 +139,10 @@ def getNewColor():
 	if color == None:
 		color = models.Color.objects.get(value="#5aaf44")
 	return color
+
+
+def stripArgs(args):
+	data = {}
+	for k in args:
+		data[k] = args[k].strip()
+	return data

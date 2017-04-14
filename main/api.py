@@ -4,7 +4,7 @@ from django.contrib import auth
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.template import loader
 from django.contrib.auth.models import User, AnonymousUser
 from main import models
@@ -15,6 +15,9 @@ from main.data import *
 
 from django.conf.urls import include, url
 from main.helpers import *
+
+def JsonResponse(response_data):
+	return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 def calendar(request):
 	if request.user.is_authenticated():
@@ -47,7 +50,6 @@ def rooms(request):
 def createMeeting(request):
 	if request.method == 'POST':
 		data = request.POST
-		print(data)
 		start, duration = parseMeetingTime(data)
 		if not models.Room.objects.get(id=int(data['room'])).active:
 			return JsonResponse({'result': 'Failed', 'message': 'This room is currently not active'})
@@ -73,7 +75,7 @@ def editMeeting(request):
 		original = models.Meeting.objects.get(id=data['id'])
 		meeting = models.Meeting.objects.get(id=data['id'])
 		meeting.description = data['description']
-		meeting.start = timezone.localtime(start)
+		meeting.start = start
 		meeting.duration = duration
 		meeting.room = models.Room.objects.get(id=int(data['room']) )
 		meeting  = tzAware(meeting)
@@ -133,6 +135,7 @@ def login(request):
 	
 	return JsonResponse(response_data)
 
+'''
 def register(request):
 	email = request.POST['email']
 	password = request.POST['password']
@@ -150,6 +153,7 @@ def register(request):
 		response_data['message'] = 'Account created'
 
 	return JsonResponse(response_data)
+'''
 
 def logout(request):
 	auth.logout(request)
@@ -165,11 +169,13 @@ def editUser(request):
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
-		data = request.POST
+		data = stripArgs(request.POST)
+
 		try:
 			if data['email'] == "" or data['name'] == "" or data['entity'] == "":
 				return JsonResponse({'result': 'Failed', 'message': 'Deve preencher todos os campos na edição de um utilizador'})
 
+			password = data['password'].strip()
 			user = User.objects.get(id=data['id'])
 			userExists = usernameExists(data['email'])
 			if userExists != None and userExists.id != user.id:
@@ -181,8 +187,8 @@ def editUser(request):
 			user.first_name = data['name']
 			user.is_active = False if data['active'] == "false" else True
 			user.is_superuser = False if data['superuser'] == "false" else True
-			if data['password'] != "":
-				user.set_password(data['password'])
+			if password != "":
+				user.set_password(password)
 			if was_active and not user.is_active:
 				deactivateUser(user)
 			elif not was_active and user.is_active:
@@ -200,11 +206,12 @@ def addUser(request):
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
-		data = request.POST
+		data = stripArgs(request.POST)
 
 		if data['email'] == "" or data['name'] == "" or data['entity'] == "" or data['password'] == "":
 			return JsonResponse({'result': 'Failed', 'message': 'Deve preencher todos os campos na criação de um utilizador.'})
 		
+		print(data)
 		user = User()
 		userExists = usernameExists(data['email'])
 		if userExists != None:
@@ -229,7 +236,7 @@ def deleteUser(request):
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
-		data = request.POST
+		data = stripArgs(request.POST)
 		try:
 			user = User.objects.get(id=data['id'])
 			Meeting.objects.filter(user=data['id']).delete()
@@ -246,7 +253,7 @@ def editRoom(request):
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
-		data = request.POST
+		data = stripArgs(request.POST)
 		try:
 			room = models.Room.objects.get(id=data['id'])
 			was_active = room.active
@@ -270,7 +277,7 @@ def addRoom(request):
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
-		data = request.POST
+		data = stripArgs(request.POST)
 		
 		room = Room()
 		room.name = data['name']
@@ -288,7 +295,7 @@ def deleteRoom(request):
 		return JsonResponse({'result': 'Failed', 'message': 'This action requires admin permissions'})
 
 	if request.method == 'POST':
-		data = request.POST
+		data = stripArgs(request.POST)
 		try:
 			room = Room.objects.get(id=data['id'])
 			Meeting.objects.filter(room=data['id']).delete()
@@ -336,16 +343,13 @@ def changePassword(request):
 		try:
 			user = User.objects.get(id=request.user.id, is_active=True)
 		except Exception as e:
-			print(str(e))
 			return JsonResponse({'result': 'Failed', 'message': 'Login as a valid user required'})
 		
-		print(data)
 		checkPass = user.check_password(data['currentPassword'])
 		if not checkPass:
 			return JsonResponse({'result': 'Failed', 'message': 'A password actual está errada.'})
 		user.set_password(data['newPassword'])
 		user.save()
-		print(user.username, )
 		user = auth.authenticate(username=user.username, password=data['newPassword'])
 		auth.login(request, user)
 		return JsonResponse({'result': 'Success', 'message': ''})

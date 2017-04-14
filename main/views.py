@@ -18,7 +18,7 @@ def login(request):
 	template = loader.get_template('main/login.html')
 	return HttpResponse(template.render({}, request))
 
-@login_required()
+@login_required(redirect_field_name="")
 def index(request, view="calendar"):
 	template = loader.get_template('main/index.html')
 
@@ -41,7 +41,7 @@ def index(request, view="calendar"):
 		content['loggedIn'] = False
 	return HttpResponse(template.render(content, request))
 
-@login_required()
+@login_required(redirect_field_name="")
 def calendar(request):
 	return index(request, "calendar")
 
@@ -56,7 +56,6 @@ def resources(request):
 def accessRevoked(request):
 	template = loader.get_template('main/accessRevoked.html')
 	return HttpResponse(template.render({}, request))
-
 
 def handler404(request):
     template = loader.get_template('main/404.html')

@@ -6,8 +6,7 @@ from django.db import connection
 def checkMeetingData(orig, m):
 	s = m.start
 	e = m.start + timedelta(minutes=m.duration)
-	now = datetime.now()
-	now = timezone.localtime(now)
+	now = timezone.now()
 
 	if orig == None or orig.start > now:
 		if m.start > now:
