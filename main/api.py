@@ -115,7 +115,9 @@ def login(request):
 	l = User.objects.filter(email=email)
 	if len(l) > 0:
 		found = User.objects.get(email=email)
-	user = auth.authenticate(username=email, password=password)
+	user = None
+	if found != None and found.is_active:
+		user = auth.authenticate(username=email, password=password)
 
 	response_data = {}
 	if user is not None:
